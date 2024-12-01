@@ -3,7 +3,8 @@
 
 use esp_alloc as _;
 use esp_backtrace as _;
-use esp_hal::{delay::Delay, prelude::*, timer::timg::TimerGroup, uart::Uart};
+use esp_hal::{delay::Delay, prelude::*};
+use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 use firefly_supervisor::*;
@@ -12,9 +13,9 @@ use firefly_supervisor::*;
 fn main() -> ! {
     let res = run();
     if let Err(err) = res {
-        log::error!("{err}");
+        println!("ERROR: {err}");
     }
-    log::info!("end");
+    println!("end");
     let delay = Delay::new();
     loop {
         delay.delay(500.millis());
@@ -22,17 +23,16 @@ fn main() -> ! {
 }
 
 fn run() -> Result<(), Error> {
-    esp_println::logger::init_logger_from_env();
-    log::info!("creating device config...");
+    println!("creating device config...");
     let mut config = esp_hal::Config::default();
     config.cpu_clock = CpuClock::max();
-    log::info!("initializing peripherals...");
+    println!("initializing peripherals...");
     let peripherals = esp_hal::init(config);
-    log::info!("initializing UART...");
-    let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
-    log::info!("initializing device...");
-    let device = DeviceImpl::new(uart)?;
-    log::info!("initializing display...");
+    // println!("initializing UART...");
+    // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
+    println!("initializing device...");
+    let device = DeviceImpl::new()?;
+    println!("initializing display...");
     let display = Display::new();
     let config = RuntimeConfig {
         id: None,
@@ -40,9 +40,9 @@ fn run() -> Result<(), Error> {
         display,
         net_handler: NetHandler::None,
     };
-    log::info!("creating runtime...");
+    println!("creating runtime...");
     let runtime = Runtime::new(config)?;
-    log::info!("running...");
+    println!("running...");
     runtime.run()?;
     Ok(())
 }

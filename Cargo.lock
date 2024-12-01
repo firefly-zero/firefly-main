@@ -888,6 +888,7 @@ dependencies = [
  "embedded-io 0.6.1",
  "embedded-storage",
  "esp-hal",
+ "esp-println",
  "esp-storage",
  "fugit",
  "gilrs",
@@ -931,7 +932,6 @@ dependencies = [
  "esp-println",
  "firefly-hal",
  "firefly-runtime",
- "log",
 ]
 
 [[package]]
