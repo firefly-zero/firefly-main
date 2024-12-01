@@ -1,13 +1,13 @@
 {
-  "name": "{{ crate_name }}",
+  "name": "firefly_supervisor",
   // Select between image and build properties to pull or build the image.
-  // "image": "docker.io/espressif/idf-rust:{{ mcu }}_latest",
+  // "image": "docker.io/espressif/idf-rust:esp32s3_latest",
   "build": {
     "dockerfile": "Dockerfile",
     "args": {
       "CONTAINER_USER": "esp",
       "CONTAINER_GROUP": "esp",
-      "ESP_BOARD": "{{ mcu }}"
+      "ESP_BOARD": "esp32s3"
     }
   },
   "customizations": {
@@ -39,10 +39,7 @@
       ]
     }
   },
-  "forwardPorts": [
-    8000,
-    3333
-  ],
-  "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/{{ crate_name }},type=bind,consistency=cached",
-  "workspaceFolder": "/home/esp/{{ crate_name }}"
+  "forwardPorts": [8000, 3333],
+  "workspaceMount": "source=${localWorkspaceFolder},target=/home/esp/firefly_supervisor,type=bind,consistency=cached",
+  "workspaceFolder": "/home/esp/firefly_supervisor"
 }
