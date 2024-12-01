@@ -11,10 +11,12 @@ esp-backtrace = { version = "0.14.2", features = [
     "println",
 ] }
 esp-hal = { version = "0.22.0", features = ["esp32s3"] }
-esp-println = { version = "0.12.0", features = ["esp32s3"] }
+esp-println = { version = "0.12.0", features = ["esp32s3", "log"] }
 esp-alloc = { version = "0.5.0" }
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
+log = { version = "0.4.21" }
+
 firefly-hal = { path = "../firefly-hal" }
 firefly-runtime = { path = "../firefly/firefly-runtime" }
 

@@ -4,5 +4,7 @@
 extern crate alloc;
 
 mod display;
+mod error;
 
 pub use display::*;
+pub use error::*;

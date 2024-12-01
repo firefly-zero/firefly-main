@@ -931,6 +931,7 @@ dependencies = [
  "esp-println",
  "firefly-hal",
  "firefly-runtime",
+ "log",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@
     "author": "Firefly Zero team",
     "parts": [
         {
-            "type": "board-esp32-devkit-c-v4",
+            "type": "board-esp32-s3-devkitc-1",
             "id": "esp",
             "top": 0.59,
             "left": 0.67,
