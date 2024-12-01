@@ -2,29 +2,28 @@
 #![no_main]
 
 use esp_backtrace as _;
-use esp_hal::delay::Delay;
 use esp_hal::prelude::*;
-use log::info;
-
-extern crate alloc;
+use firefly_hal::*;
+use firefly_runtime::*;
+use firefly_supervisor::*;
 
 #[entry]
 fn main() -> ! {
-    let _peripherals = esp_hal::init({
-        let mut config = esp_hal::Config::default();
-        config.cpu_clock = CpuClock::max();
-        config
-    });
-
-    esp_println::logger::init_logger_from_env();
-
-    esp_alloc::heap_allocator!(72 * 1024);
-
-    let delay = Delay::new();
-    loop {
-        info!("Hello world!");
-        delay.delay(500.millis());
+    let res = run();
+    if let Err(err) = res {
+        panic!("{err}");
     }
+    panic!("end")
+}
 
-    // for inspiration have a look at the examples at https://github.com/esp-rs/esp-hal/tree/v0.22.0/examples/src/bin
+fn run() -> Result<(), Error> {
+    let config = RuntimeConfig {
+        id: None,
+        device: DeviceImpl::new(),
+        display: Display::new(),
+        net_handler: NetHandler::None,
+    };
+    let runtime = Runtime::new(config)?;
+    runtime.run()?;
+    Ok(())
 }
