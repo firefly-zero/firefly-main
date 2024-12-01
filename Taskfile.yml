@@ -1,0 +1,14 @@
+# https://taskfile.dev
+version: "3"
+dotenv:
+  - ~/export-esp.sh
+tasks:
+  build:
+    cmds:
+      - cargo build --release
+  flash:
+    cmds:
+      - task: build
+      - >
+        web-flash --chip esp32s3
+        target/xtensa-esp32s3-none-elf/release/firefly_supervisor
