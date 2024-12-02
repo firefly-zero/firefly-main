@@ -25,10 +25,10 @@ firefly-runtime = { path = "../firefly/firefly-runtime" }
 opt-level = "s"
 
 [profile.release]
+strip = true             # Automatically strip symbols from the binary.
 codegen-units = 1        # LLVM can perform better optimizations using a single thread
-debug = 2
 debug-assertions = false
 incremental = false
 lto = 'fat'
-opt-level = 's'
+opt-level = "z"          # Optimize for size.
 overflow-checks = false
