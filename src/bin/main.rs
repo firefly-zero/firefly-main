@@ -3,9 +3,8 @@
 
 extern crate alloc;
 
-use esp_alloc as _;
 use esp_backtrace as _;
-use esp_hal::{delay::Delay, prelude::*, timer::systimer::SystemTimer};
+use esp_hal::{delay::Delay, prelude::*};
 use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
@@ -13,6 +12,7 @@ use firefly_supervisor::*;
 
 #[entry]
 fn main() -> ! {
+    esp_alloc::heap_allocator!(190 * 1024);
     let res = run();
     if let Err(err) = res {
         println!("ERROR: {err}");
