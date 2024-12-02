@@ -1,12 +1,14 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
 use esp_alloc as _;
 use esp_backtrace as _;
-use esp_hal::{delay::Delay, prelude::*};
+use esp_hal::{delay::Delay, prelude::*, timer::systimer::SystemTimer};
 use esp_println::println;
 use firefly_hal::DeviceImpl;
-use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
+use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
 use firefly_supervisor::*;
 
 #[entry]
@@ -35,7 +37,11 @@ fn run() -> Result<(), Error> {
     println!("initializing display...");
     let display = Display::new();
     let config = RuntimeConfig {
-        id: None,
+        // id: None,
+        id: Some(FullID::new(
+            "demo".try_into().unwrap(),
+            "go-debug".try_into().unwrap(),
+        )),
         device,
         display,
         net_handler: NetHandler::None,
