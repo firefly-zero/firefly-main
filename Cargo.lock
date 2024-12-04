@@ -621,6 +621,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-hal-bus"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d3980bf28e8577db59fe2bdb3df868a419469d2cecb363644eea2b6f7797669"
+dependencies = [
+ "critical-section",
+ "embedded-hal 1.0.0",
+ "portable-atomic",
+]
+
+[[package]]
 name = "embedded-hal-nb"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -953,12 +964,14 @@ dependencies = [
  "display-interface",
  "display-interface-spi",
  "embedded-graphics",
+ "embedded-hal-bus",
  "esp-alloc",
  "esp-backtrace",
  "esp-hal",
  "esp-println",
  "firefly-hal",
  "firefly-runtime",
+ "ili9341",
  "mipidsi",
  "num-traits",
 ]
@@ -1159,6 +1172,17 @@ name = "ident_case"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
+name = "ili9341"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc105605dba076630f5a1a22ba80bcff216af2619859f1595e9ddd72b89db30a"
+dependencies = [
+ "display-interface",
+ "embedded-graphics-core",
+ "embedded-hal 1.0.0",
+]
 
 [[package]]
 name = "indexmap"
