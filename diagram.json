@@ -28,7 +28,8 @@
     ["esp:GND.1", "lcd1:GND", "black", ["v12.64", "h65.1", "v-200.45"]],
     ["lcd1:CS", "lcd1:GND", "black", ["h21.64", "v9.6"]],
     ["esp:4", "lcd1:D/C", "green", ["v24.15", "h244.8", "v-240.76"]],
-    ["lcd1:VCC", "esp:5V", "red", ["h16.27", "v196.99", "h-65.22"]]
+    ["lcd1:VCC", "esp:5V", "red", ["h16.27", "v196.99", "h-65.22"]],
+    ["lcd1:LED", "esp:3V3", "purple", []]
   ],
   "serialMonitor": {
     "display": "terminal"

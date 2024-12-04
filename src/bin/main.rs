@@ -40,12 +40,12 @@ fn run() -> Result<(), Error> {
     // println!("initializing UART...");
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
-    let sclk = peripherals.GPIO7;
-    let mosi = peripherals.GPIO6;
-    let cs = peripherals.GPIO5;
-    let miso = peripherals.GPIO2;
+    let sclk = peripherals.GPIO36;
+    let mosi = peripherals.GPIO35;
+    // let cs = peripherals.GPIO5;
+    // let miso = peripherals.GPIO2;
     let dc = Output::new(peripherals.GPIO4, Level::Low);
-    let mut gpio_backlight = Output::new(peripherals.GPIO45, Level::Low);
+    // let mut gpio_backlight = Output::new(peripherals.GPIO45, Level::Low);
     let rst = Output::new(peripherals.GPIO48, Level::Low);
 
     let dma = Dma::new(peripherals.DMA);
@@ -60,11 +60,11 @@ fn run() -> Result<(), Error> {
     )
     .with_sck(sclk)
     .with_mosi(mosi)
-    .with_miso(miso)
-    .with_cs(cs)
+    // .with_miso(miso)
+    // .with_cs(cs)
     .with_dma(dma_channel.configure(false, DmaPriority::Priority0));
     let mut delay = Delay::new();
-    gpio_backlight.set_high();
+    // gpio_backlight.set_high();
 
     // let di = SPIInterface::new(spi, dc);
     let di = new_no_cs(240 * 320 * 2, spi, dc);
