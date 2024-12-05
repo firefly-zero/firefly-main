@@ -81,17 +81,19 @@ fn run() -> Result<(), Error> {
     let spi_bus = RefCell::new(spi);
     let cs = Output::new(peripherals.GPIO5, Level::High);
     let spi_device = RefCellDevice::new_no_delay(&spi_bus, cs).unwrap();
-    let spi_iface = SPIInterface::new(spi_device, dc);
+    let di = SPIInterface::new(spi_device, dc);
 
     println!("initializing display...");
-    let display = Ili9341::new(
-        spi_iface,
-        rst,
-        &mut delay,
-        Orientation::Landscape,
-        DisplaySize240x320,
-    )
-    .unwrap();
+    let display = mipidsi::Builder::new(mipidsi::models::ILI9341Rgb565, di)
+        .display_size(240, 320)
+        .orientation(
+            mipidsi::options::Orientation::new()
+                .rotate(mipidsi::options::Rotation::Deg90)
+                .flip_horizontal(),
+        )
+        .color_order(mipidsi::options::ColorOrder::Bgr)
+        .reset_pin(rst)
+        .init(&mut delay)?;
 
     println!("initializing device...");
     let device = DeviceImpl::new()?;
