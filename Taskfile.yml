@@ -11,4 +11,4 @@ tasks:
       - task: build
       - >
         web-flash --chip esp32s3
-        target/xtensa-esp32s3-none-elf/release/main
+        target/xtensa-esp32s3-none-elf/release/firefly-supervisor
