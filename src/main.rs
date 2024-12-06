@@ -7,6 +7,7 @@ use core::cell::RefCell;
 
 use display_interface_spi::SPIInterface;
 use embedded_hal_bus::spi::RefCellDevice;
+use embedded_sdmmc::SdCard;
 use esp_backtrace as _;
 use esp_hal::{
     delay::Delay,
@@ -94,6 +95,27 @@ fn run() -> Result<(), Error> {
         .color_order(mipidsi::options::ColorOrder::Bgr)
         .reset_pin(rst)
         .init(&mut delay)?;
+
+    let sclk = peripherals.GPIO13;
+    let miso = peripherals.GPIO12;
+    let mosi = peripherals.GPIO11;
+    let cs = Output::new(peripherals.GPIO6, Level::High);
+
+    println!("initializing SD card...");
+    let spi = Spi::new_with_config(
+        peripherals.SPI3,
+        esp_hal::spi::master::Config {
+            frequency: 1000u32.kHz(),
+            ..esp_hal::spi::master::Config::default()
+        },
+    )
+    .with_sck(sclk)
+    .with_miso(miso)
+    .with_mosi(mosi);
+    let spi_bus = RefCell::new(spi);
+    let spi_device = RefCellDevice::new_no_delay(&spi_bus, cs).unwrap();
+    // let spi = SPIInterface::new(spi_device, dc);
+    let sdcard = SdCard::new(spi_device, delay);
 
     println!("initializing device...");
     let device = DeviceImpl::new()?;

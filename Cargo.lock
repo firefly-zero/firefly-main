@@ -663,6 +663,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-sdmmc"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "eb637331040ec9b35f6a8151904d1aca914cc349d14c91b9a3e92ba789b22f3f"
+dependencies = [
+ "byteorder",
+ "embedded-hal 1.0.0",
+ "heapless 0.8.0",
+]
+
+[[package]]
 name = "embedded-storage"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -965,6 +976,7 @@ dependencies = [
  "display-interface-spi",
  "embedded-graphics",
  "embedded-hal-bus",
+ "embedded-sdmmc",
  "esp-alloc",
  "esp-backtrace",
  "esp-hal",
