@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "editor": "wokwi",
   "author": "Firefly Zero team",
+  "editor": "wokwi",
   "parts": [
     {
       "type": "board-esp32-s3-devkitc-1",
@@ -21,18 +21,17 @@
     }
   ],
   "connections": [
-    ["esp:TX", "$serialMonitor:RX", "", []],
-    ["esp:RX", "$serialMonitor:TX", "", []],
-    ["lcd1:SCK", "esp:36", "orange", ["h41.59", "v128.76", "h-180.28"]],
-    ["lcd1:MOSI", "esp:35", "blue", ["h35.45", "v124.53", "h-164.54"]],
-    ["esp:GND.1", "lcd1:GND", "black", ["v12.64", "h65.1", "v-200.45"]],
-    ["lcd1:CS", "esp:5", "black", ["h21.64", "v9.6"]],
-    ["esp:4", "lcd1:D/C", "green", ["v24.15", "h244.8", "v-240.76"]],
-    ["lcd1:VCC", "esp:5V", "red", ["h16.27", "v196.99", "h-65.22"]],
-    ["esp:3V3.1", "lcd1:LED", "purple", ["h17.27", "v197.99", "h-67.22"]],
-    ["esp:48", "lcd1:RST", "blue", ["h17.27", "v197.99", "h-67.22"]]
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "lcd1:SCK", "esp:36", "orange", [ "h43.41", "v115.52", "h-181.6" ] ],
+    [ "lcd1:MOSI", "esp:35", "blue", [ "h33.81", "v115.52", "h-162.4" ] ],
+    [ "esp:GND.1", "lcd1:GND", "black", [ "v12.64", "h114.4", "v-199.95" ] ],
+    [ "lcd1:CS", "esp:5", "yellow", [ "h81.81", "v230.71", "h-287.2" ] ],
+    [ "esp:4", "lcd1:D/C", "green", [ "v43.4", "h306.4", "v-259.51" ] ],
+    [ "lcd1:VCC", "esp:5V", "red", [ "h62.61", "v196.99", "h-114.4" ] ],
+    [ "esp:3V3.1", "lcd1:LED", "purple", [ "h-0.8", "v53", "h345.6", "v-297.92" ] ],
+    [ "esp:48", "lcd1:RST", "cyan", [ "h-0.8", "v-14.25", "h153.6", "v-105.91" ] ]
   ],
-  "serialMonitor": {
-    "display": "terminal"
-  }
+  "serialMonitor": { "display": "terminal" },
+  "dependencies": {}
 }
