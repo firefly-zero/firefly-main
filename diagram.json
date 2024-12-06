@@ -18,19 +18,26 @@
       "left": -38.21,
       "rotate": 270,
       "attrs": {}
-    }
+    },
+    { "type": "wokwi-microsd-card", "id": "sd1", "top": 384.23, "left": -153.53, "attrs": {} }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
     [ "lcd1:SCK", "esp:36", "orange", [ "h43.41", "v115.52", "h-181.6" ] ],
     [ "lcd1:MOSI", "esp:35", "blue", [ "h33.81", "v115.52", "h-162.4" ] ],
-    [ "esp:GND.1", "lcd1:GND", "black", [ "v12.64", "h114.4", "v-199.95" ] ],
+    [ "esp:GND.1", "lcd1:GND", "black", [ "v14.6", "h114.4", "v-201.91" ] ],
     [ "lcd1:CS", "esp:5", "yellow", [ "h81.81", "v230.71", "h-287.2" ] ],
     [ "esp:4", "lcd1:D/C", "green", [ "v43.4", "h306.4", "v-259.51" ] ],
-    [ "lcd1:VCC", "esp:5V", "red", [ "h62.61", "v196.99", "h-114.4" ] ],
+    [ "lcd1:VCC", "esp:5V", "red", [ "h62.61", "v201.91", "h-115.2", "v-24.2" ] ],
     [ "esp:3V3.1", "lcd1:LED", "purple", [ "h-0.8", "v53", "h345.6", "v-297.92" ] ],
-    [ "esp:48", "lcd1:RST", "cyan", [ "h-0.8", "v-14.25", "h153.6", "v-105.91" ] ]
+    [ "esp:48", "lcd1:RST", "cyan", [ "h-0.8", "v-14.25", "h153.6", "v-105.91" ] ],
+    [ "sd1:SCK", "esp:13", "gold", [ "v-0.01", "h192.8" ] ],
+    [ "sd1:GND", "esp:GND.1", "black", [ "v0.11", "h221.6" ] ],
+    [ "sd1:DO", "esp:12", "#8f4814", [ "v0.11", "h183.2" ] ],
+    [ "sd1:DI", "esp:11", "magenta", [ "v-0.09", "h173.6" ] ],
+    [ "esp:5V", "sd1:VCC", "red", [ "v11", "h-0.8", "v109.2", "h-182.4", "v-0.14" ] ],
+    [ "sd1:CS", "esp:6", "gray", [ "v0.06", "h48.8" ] ]
   ],
   "serialMonitor": { "display": "terminal" },
   "dependencies": {}
