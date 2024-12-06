@@ -6,7 +6,7 @@ extern crate alloc;
 use core::cell::RefCell;
 
 use display_interface_spi::SPIInterface;
-use embedded_hal_bus::spi::RefCellDevice;
+use embedded_hal_bus::spi::{ExclusiveDevice, RefCellDevice};
 use embedded_sdmmc::SdCard;
 use esp_backtrace as _;
 use esp_hal::{
@@ -79,9 +79,8 @@ fn run() -> Result<(), Error> {
     // If there is no delay, display is blank
     delay.delay_millis(500u32);
 
-    let spi_bus = RefCell::new(spi);
     let cs = Output::new(peripherals.GPIO5, Level::High);
-    let spi_device = RefCellDevice::new_no_delay(&spi_bus, cs).unwrap();
+    let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
     let di = SPIInterface::new(spi_device, dc);
 
     println!("initializing display...");
@@ -112,13 +111,12 @@ fn run() -> Result<(), Error> {
     .with_sck(sclk)
     .with_miso(miso)
     .with_mosi(mosi);
-    let spi_bus = RefCell::new(spi);
-    let spi_device = RefCellDevice::new_no_delay(&spi_bus, cs).unwrap();
+    let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
     // let spi = SPIInterface::new(spi_device, dc);
     let sdcard = SdCard::new(spi_device, delay);
 
     println!("initializing device...");
-    let device = DeviceImpl::new()?;
+    let device = DeviceImpl::new(sdcard)?;
     let config = RuntimeConfig {
         // id: None,
         id: Some(FullID::new(

@@ -931,7 +931,9 @@ dependencies = [
 name = "firefly-hal"
 version = "0.1.0"
 dependencies = [
+ "embedded-hal-bus",
  "embedded-io 0.6.1",
+ "embedded-sdmmc",
  "embedded-storage",
  "esp-hal",
  "esp-println",
