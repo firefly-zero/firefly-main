@@ -3,12 +3,20 @@ version: "3"
 dotenv:
   - ~/export-esp.sh
 tasks:
+  install-espflash:
+    status:
+      - which cargo-espflash
+    cmds:
+      - cargo install cargo-espflash
   build:
     cmds:
       - cargo build --release
   flash:
     cmds:
-      - task: build
+      - task: install-espflash
       - >
-        web-flash --chip esp32s3
-        target/xtensa-esp32s3-none-elf/release/firefly-supervisor
+        cargo espflash flash
+        --skip-update-check
+        --chip esp32s3
+        --release
+        {{.CLI_ARGS}}
