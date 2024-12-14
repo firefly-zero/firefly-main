@@ -21,7 +21,7 @@ use firefly_supervisor::*;
 
 #[entry]
 fn main() -> ! {
-    esp_alloc::heap_allocator!(190 * 1024);
+    esp_alloc::heap_allocator!(300 * 1024);
     let res = run();
     if let Err(err) = res {
         println!("ERROR: {err}");
@@ -59,7 +59,7 @@ fn run() -> Result<(), Error> {
         let spi = Spi::new_with_config(
             peripherals.SPI3,
             esp_hal::spi::master::Config {
-                frequency: 40u32.MHz(),
+                frequency: 60u32.MHz(),
                 ..esp_hal::spi::master::Config::default()
             },
         )
