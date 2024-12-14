@@ -671,6 +671,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "embedded-io 0.6.1",
  "heapless 0.8.0",
+ "log",
 ]
 
 [[package]]
@@ -805,6 +806,7 @@ dependencies = [
  "esp-synopsys-usb-otg",
  "esp32s3",
  "fugit",
+ "log",
  "nb 1.1.0",
  "paste",
  "portable-atomic",
@@ -986,6 +988,7 @@ dependencies = [
  "firefly-hal",
  "firefly-runtime",
  "ili9341",
+ "log",
  "mipidsi",
  "num-traits",
 ]

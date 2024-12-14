@@ -20,3 +20,7 @@ tasks:
         --chip esp32s3
         --release
         {{.CLI_ARGS}}
+  monitor:
+    cmds:
+      - task: install-espflash
+      - cargo espflash monitor

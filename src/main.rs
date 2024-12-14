@@ -42,6 +42,7 @@ fn run() -> Result<(), Error> {
     config.cpu_clock = CpuClock::max();
     println!("initializing peripherals...");
     let peripherals = esp_hal::init(config);
+    esp_println::logger::init_logger(log::LevelFilter::Trace);
     // println!("initializing UART...");
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
@@ -57,7 +58,7 @@ fn run() -> Result<(), Error> {
     let dma_channel = dma.channel0;
 
     let spi = Spi::new_with_config(
-        peripherals.SPI2,
+        peripherals.SPI3,
         esp_hal::spi::master::Config {
             frequency: 40u32.MHz(),
             ..esp_hal::spi::master::Config::default()
@@ -88,7 +89,7 @@ fn run() -> Result<(), Error> {
         .display_size(240, 320)
         .orientation(
             mipidsi::options::Orientation::new()
-                .rotate(mipidsi::options::Rotation::Deg90)
+                .rotate(mipidsi::options::Rotation::Deg270)
                 .flip_horizontal(),
         )
         .color_order(mipidsi::options::ColorOrder::Bgr)
@@ -102,9 +103,9 @@ fn run() -> Result<(), Error> {
 
     println!("initializing SD card...");
     let spi = Spi::new_with_config(
-        peripherals.SPI3,
+        peripherals.SPI2,
         esp_hal::spi::master::Config {
-            frequency: 1000u32.kHz(),
+            frequency: 200u32.kHz(),
             ..esp_hal::spi::master::Config::default()
         },
     )
@@ -114,14 +115,18 @@ fn run() -> Result<(), Error> {
     let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
     // let spi = SPIInterface::new(spi_device, dc);
     let sdcard = SdCard::new(spi_device, delay);
+    if let Some(card_type) = sdcard.get_card_type() {
+        println!("SD | card type: {card_type:?}");
+    }
+    println!("SD | num bytes: {:?}", sdcard.num_bytes());
 
     println!("initializing device...");
     let device = DeviceImpl::new(sdcard)?;
     let config = RuntimeConfig {
         // id: None,
         id: Some(FullID::new(
-            "demo".try_into().unwrap(),
-            "go-triangle".try_into().unwrap(),
+            "lux".try_into().unwrap(),
+            "snek".try_into().unwrap(),
         )),
         device,
         display,
