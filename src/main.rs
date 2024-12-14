@@ -42,68 +42,66 @@ fn run() -> Result<(), Error> {
     // println!("initializing UART...");
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
-    let sclk = peripherals.GPIO36;
-    let mosi = peripherals.GPIO35;
-    let cs = peripherals.GPIO5;
-    let miso = peripherals.GPIO2;
-    let dc = Output::new(peripherals.GPIO4, Level::Low);
-    let mut gpio_backlight = Output::new(peripherals.GPIO45, Level::Low);
-    let rst = Output::new(peripherals.GPIO48, Level::Low);
-
-    let dma = Dma::new(peripherals.DMA);
-    let dma_channel = dma.channel0;
-
-    let spi = Spi::new_with_config(
-        peripherals.SPI3,
-        esp_hal::spi::master::Config {
-            frequency: 40u32.MHz(),
-            ..esp_hal::spi::master::Config::default()
-        },
-    )
-    .with_sck(sclk)
-    .with_mosi(mosi)
-    .with_miso(miso)
-    .with_cs(cs)
-    .with_dma(dma_channel.configure(false, DmaPriority::Priority0));
     let mut delay = Delay::new();
-    gpio_backlight.set_high();
-
-    let di = new_no_cs(240 * 320 * 2, spi, dc);
 
     println!("initializing display...");
-    let display = mipidsi::Builder::new(mipidsi::models::ILI9341Rgb565, di)
-        .display_size(240, 320)
-        .orientation(
-            mipidsi::options::Orientation::new()
-                .rotate(mipidsi::options::Rotation::Deg270)
-                .flip_horizontal(),
-        )
-        .color_order(mipidsi::options::ColorOrder::Bgr)
-        .reset_pin(rst)
-        .init(&mut delay)?;
+    let display = {
+        let sclk = peripherals.GPIO36;
+        let mosi = peripherals.GPIO35;
+        let cs = peripherals.GPIO5;
+        let miso = peripherals.GPIO2;
+        let dc = Output::new(peripherals.GPIO4, Level::Low);
+        let mut gpio_backlight = Output::new(peripherals.GPIO45, Level::Low);
+        let rst = Output::new(peripherals.GPIO48, Level::Low);
 
-    let sclk = peripherals.GPIO13;
-    let miso = peripherals.GPIO12;
-    let mosi = peripherals.GPIO11;
-    let cs = Output::new(peripherals.GPIO6, Level::High);
+        let dma = Dma::new(peripherals.DMA);
+        let dma_channel = dma.channel0;
+        let spi = Spi::new_with_config(
+            peripherals.SPI3,
+            esp_hal::spi::master::Config {
+                frequency: 40u32.MHz(),
+                ..esp_hal::spi::master::Config::default()
+            },
+        )
+        .with_sck(sclk)
+        .with_mosi(mosi)
+        .with_miso(miso)
+        .with_cs(cs)
+        .with_dma(dma_channel.configure(false, DmaPriority::Priority0));
+        gpio_backlight.set_high();
+        let di = new_no_cs(240 * 320 * 2, spi, dc);
+        mipidsi::Builder::new(mipidsi::models::ILI9341Rgb565, di)
+            .display_size(240, 320)
+            .orientation(
+                mipidsi::options::Orientation::new()
+                    .rotate(mipidsi::options::Rotation::Deg270)
+                    .flip_horizontal(),
+            )
+            .color_order(mipidsi::options::ColorOrder::Bgr)
+            .reset_pin(rst)
+            .init(&mut delay)?
+    };
 
     println!("initializing SD card...");
-    let spi = Spi::new_with_config(
-        peripherals.SPI2,
-        esp_hal::spi::master::Config {
-            frequency: 200u32.kHz(),
-            ..esp_hal::spi::master::Config::default()
-        },
-    )
-    .with_sck(sclk)
-    .with_miso(miso)
-    .with_mosi(mosi);
-    let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
-    let sdcard = SdCard::new(spi_device, delay);
-    if let Some(card_type) = sdcard.get_card_type() {
-        println!("SD | card type: {card_type:?}");
-    }
-    println!("SD | num bytes: {:?}", sdcard.num_bytes());
+    let sdcard = {
+        let sclk = peripherals.GPIO13;
+        let miso = peripherals.GPIO12;
+        let mosi = peripherals.GPIO11;
+        let cs = Output::new(peripherals.GPIO6, Level::High);
+
+        let spi = Spi::new_with_config(
+            peripherals.SPI2,
+            esp_hal::spi::master::Config {
+                frequency: 200u32.kHz(),
+                ..esp_hal::spi::master::Config::default()
+            },
+        )
+        .with_sck(sclk)
+        .with_miso(miso)
+        .with_mosi(mosi);
+        let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
+        SdCard::new(spi_device, delay)
+    };
 
     println!("initializing device...");
     let device = DeviceImpl::new(sdcard)?;
