@@ -105,17 +105,8 @@ fn run() -> Result<(), Error> {
         SdCard::new(spi_device, delay)
     };
 
-    let timg0 = TimerGroup::new(peripherals.TIMG0);
-    let inited = esp_wifi::init(
-        timg0.timer0,
-        Rng::new(peripherals.RNG),
-        peripherals.RADIO_CLK,
-    )
-    .unwrap();
-    let esp_now = esp_wifi::esp_now::EspNow::new(&inited, peripherals.WIFI).unwrap();
-
     println!("initializing device...");
-    let device = DeviceImpl::new(sdcard, esp_now)?;
+    let device = DeviceImpl::new(sdcard)?;
     let config = RuntimeConfig {
         id: None,
         // id: Some(FullID::new(

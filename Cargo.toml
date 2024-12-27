@@ -25,7 +25,6 @@ num-traits = { version = "0.2.19", default-features = false }
 embedded-hal-bus = "0.2.0"
 # https://github.com/rust-embedded-community/embedded-sdmmc-rs/issues/168
 embedded-sdmmc = { git = "https://github.com/rust-embedded-community/embedded-sdmmc-rs" }
-esp-wifi = { version = "0.11.0", features = ["esp32s3", "esp-now"] }
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.
