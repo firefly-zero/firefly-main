@@ -1,9 +1,6 @@
 #![no_std]
 #![no_main]
-
 extern crate alloc;
-
-use core::cell::{OnceCell, RefCell};
 
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
@@ -12,15 +9,11 @@ use esp_hal::{
     dma::{Dma, DmaPriority},
     gpio::{Level, Output},
     lcd_cam::{
-        lcd::{
-            i8080::{TxEightBits, TxSixteenBits, I8080},
-            Lcd,
-        },
+        lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
     },
     prelude::*,
     spi::master::Spi,
-    Blocking,
 };
 use esp_println::println;
 use firefly_hal::DeviceImpl;
@@ -73,9 +66,11 @@ fn run() -> Result<(), Error> {
             peripherals.GPIO2,
         );
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
+        let dma = Dma::new(peripherals.DMA);
+        let dma_channel = dma.channel0.configure(false, DmaPriority::Priority0);
         let mut i8080 = I8080::new(
             lcd_cam.lcd,
-            channel.tx,
+            dma_channel.tx,
             tx_pins,
             20.MHz(),
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
