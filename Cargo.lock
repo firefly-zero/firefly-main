@@ -921,14 +921,15 @@ dependencies = [
 name = "firefly-hal"
 version = "0.1.0"
 dependencies = [
+ "embedded-hal 1.0.0",
  "embedded-hal-bus",
  "embedded-io 0.6.1",
  "embedded-sdmmc",
  "esp-hal",
  "esp-println",
+ "firefly-types",
  "fugit",
  "gilrs",
- "heapless 0.8.0",
  "hound",
  "rodio",
  "rust-embed",
@@ -980,8 +981,6 @@ dependencies = [
 [[package]]
 name = "firefly-types"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "58c687dbcc350aa2cbb9691a919e03d1949bb025d2fc76ff6515415a4f8e3cbf"
 dependencies = [
  "postcard",
  "serde",

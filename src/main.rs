@@ -3,22 +3,18 @@
 
 extern crate alloc;
 
-use core::cell::RefCell;
-use embedded_hal_bus::spi::{ExclusiveDevice, RefCellDevice};
-use embedded_sdmmc::SdCard;
+use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
 use esp_hal::{
     delay::Delay,
     dma::{Dma, DmaPriority},
     gpio::{Level, Output},
     prelude::*,
-    rng::Rng,
     spi::master::Spi,
-    timer::timg::TimerGroup,
 };
 use esp_println::println;
 use firefly_hal::DeviceImpl;
-use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
+use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 use firefly_supervisor::*;
 
 #[entry]
@@ -85,7 +81,7 @@ fn run() -> Result<(), Error> {
     };
 
     println!("initializing SD card...");
-    let sdcard = {
+    let sd_spi = {
         let sclk = peripherals.GPIO13;
         let miso = peripherals.GPIO12;
         let mosi = peripherals.GPIO11;
@@ -101,12 +97,11 @@ fn run() -> Result<(), Error> {
         .with_sck(sclk)
         .with_miso(miso)
         .with_mosi(mosi);
-        let spi_device = ExclusiveDevice::new_no_delay(spi, cs).unwrap();
-        SdCard::new(spi_device, delay)
+        ExclusiveDevice::new_no_delay(spi, cs).unwrap()
     };
 
     println!("initializing device...");
-    let device = DeviceImpl::new(sdcard)?;
+    let device = DeviceImpl::new(sd_spi, io_spi)?;
     let config = RuntimeConfig {
         id: None,
         // id: Some(FullID::new(
