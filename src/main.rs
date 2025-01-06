@@ -76,7 +76,7 @@ fn run() -> Result<(), Error> {
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
         )
         .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO15);
-        // todo!()
+        todo!()
     };
 
     println!("initializing SPIs...");
