@@ -24,8 +24,7 @@ impl<'a> OriginDimensions for Display<'a> {
 }
 
 impl<'a> Display<'a> {
-    fn set_pixel(&mut self, pixel: Pixel<Rgb666>) {
-        let Pixel(point, color) = pixel;
+    fn set_pixel(&mut self, point: Point, color: Rgb666) {
         todo!()
     }
 
@@ -42,6 +41,10 @@ impl<'a> DrawTarget for Display<'a> {
     where
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
-        todo!()
+        for pixel in pixels {
+            let Pixel(point, color) = pixel;
+            self.set_pixel(point, color);
+        }
+        Ok(())
     }
 }

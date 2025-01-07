@@ -7,7 +7,8 @@ use esp_backtrace as _;
 use esp_hal::{
     delay::Delay,
     dma::{Dma, DmaPriority},
-    gpio::{Level, Output},
+    dma_buffers,
+    gpio::{Level, NoPin, Output},
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
@@ -68,15 +69,17 @@ fn run() -> Result<(), Error> {
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
         let dma = Dma::new(peripherals.DMA);
         let dma_channel = dma.channel0.configure(false, DmaPriority::Priority0);
-        let mut i8080 = I8080::new(
+        let (rx_buffer, rx_descriptors, tx_buffer, tx_descriptors) =
+            dma_buffers!(0, 480 * 320 * 18 / 8);
+        let i8080 = I8080::new(
             lcd_cam.lcd,
             dma_channel.tx,
             tx_pins,
             20.MHz(),
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
         )
-        .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO15);
-        todo!()
+        .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO3);
+        Display { i8080 }
     };
 
     println!("initializing SPIs...");
@@ -112,6 +115,7 @@ fn run() -> Result<(), Error> {
         .with_sck(sclk)
         .with_miso(miso)
         .with_mosi(mosi);
+        let cs = NoPin;
         ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
     };
 
