@@ -18,8 +18,8 @@ use esp_hal::{
 };
 use esp_println::println;
 use firefly_hal::DeviceImpl;
+use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
-use firefly_supervisor::*;
 
 #[entry]
 fn main() -> ! {

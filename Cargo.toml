@@ -1,5 +1,5 @@
 [package]
-name = "firefly-supervisor"
+name = "firefly-main"
 version = "0.1.0"
 edition = "2021"
 

@@ -916,6 +916,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "firefly-main"
+version = "0.1.0"
+dependencies = [
+ "critical-section",
+ "embedded-graphics",
+ "embedded-hal-bus",
+ "embedded-sdmmc",
+ "esp-alloc",
+ "esp-backtrace",
+ "esp-hal",
+ "esp-println",
+ "firefly-hal",
+ "firefly-runtime",
+ "ili9488",
+]
+
+[[package]]
 name = "firefly-runtime"
 version = "0.1.0"
 dependencies = [
@@ -931,23 +948,6 @@ dependencies = [
  "postcard",
  "serde",
  "wasmi",
-]
-
-[[package]]
-name = "firefly-supervisor"
-version = "0.1.0"
-dependencies = [
- "critical-section",
- "embedded-graphics",
- "embedded-hal-bus",
- "embedded-sdmmc",
- "esp-alloc",
- "esp-backtrace",
- "esp-hal",
- "esp-println",
- "firefly-hal",
- "firefly-runtime",
- "ili9488",
 ]
 
 [[package]]
