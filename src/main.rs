@@ -7,7 +7,7 @@ use esp_backtrace as _;
 use esp_hal::{
     delay::Delay,
     dma::{Dma, DmaPriority},
-    dma_buffers,
+    dma_tx_buffer,
     gpio::{Level, NoPin, Output},
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
@@ -44,8 +44,6 @@ fn run() -> Result<(), Error> {
     // println!("initializing UART...");
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
-    let mut delay = Delay::new();
-
     println!("initializing display...");
     let display = {
         let tx_pins = TxSixteenBits::new(
@@ -69,9 +67,7 @@ fn run() -> Result<(), Error> {
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
         let dma = Dma::new(peripherals.DMA);
         let dma_channel = dma.channel0.configure(false, DmaPriority::Priority0);
-        let (rx_buffer, rx_descriptors, tx_buffer, tx_descriptors) =
-            dma_buffers!(0, 480 * 320 * 18 / 8);
-        let i8080 = I8080::new(
+        let bus = I8080::new(
             lcd_cam.lcd,
             dma_channel.tx,
             tx_pins,
@@ -79,7 +75,9 @@ fn run() -> Result<(), Error> {
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
         )
         .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO3);
-        Display { i8080 }
+        let buf = dma_tx_buffer!(480 * 3 * 10).unwrap(); // 10 lines
+        let commander = ili9488::Commander::new(bus, buf);
+        ili9488::Display::new(commander).unwrap()
     };
 
     println!("initializing SPIs...");

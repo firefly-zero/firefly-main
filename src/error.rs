@@ -24,15 +24,6 @@ impl From<esp_hal::uart::Error> for Error {
     }
 }
 
-impl<T> From<mipidsi::error::InitError<T>> for Error {
-    fn from(v: mipidsi::error::InitError<T>) -> Self {
-        match v {
-            mipidsi::error::InitError::DisplayError => Self::Display,
-            mipidsi::error::InitError::Pin(_) => Self::Pin,
-        }
-    }
-}
-
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
