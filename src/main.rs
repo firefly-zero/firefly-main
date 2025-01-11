@@ -77,7 +77,7 @@ fn run() -> Result<(), Error> {
         .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO3);
         let buf = dma_tx_buffer!(480 * 3 * 10).unwrap(); // 10 lines
         let commander = ili9488::Commander::new(bus, buf);
-        ili9488::Display::new(commander).unwrap()
+        ili9488::Display::<ili9488::Rgb888>::new(commander).unwrap()
     };
 
     println!("initializing SPIs...");
