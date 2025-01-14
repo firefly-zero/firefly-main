@@ -23,4 +23,4 @@ tasks:
   monitor:
     cmds:
       - task: install-espflash
-      - cargo espflash monitor
+      - cargo espflash monitor {{.CLI_ARGS}}
