@@ -21,11 +21,11 @@ use esp_hal::{
 use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
-use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
+use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
 
 #[entry]
 fn main() -> ! {
-    esp_alloc::heap_allocator!(300 * 1024);
+    esp_alloc::heap_allocator!(200 * 1024);
     let res = run();
     if let Err(err) = res {
         println!("ERROR: {err}");
@@ -47,7 +47,7 @@ fn run() -> Result<(), Error> {
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
     println!("initializing display...");
-    let display = {
+    let mut display = {
         let tx_pins = TxSixteenBits::new(
             peripherals.GPIO9,
             peripherals.GPIO10,
@@ -66,6 +66,12 @@ fn run() -> Result<(), Error> {
             peripherals.GPIO43,
             peripherals.GPIO2,
         );
+
+        // hardware reset
+        let rst = peripherals.GPIO46;
+        let mut rst = Output::new(rst, Level::Low);
+        rst.set_high();
+
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
         let dma = Dma::new(peripherals.DMA);
         let dma_channel = dma.channel0.configure(false, DmaPriority::Priority0);
@@ -76,11 +82,18 @@ fn run() -> Result<(), Error> {
             20.MHz(),
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
         )
-        .with_ctrl_pins(peripherals.GPIO1, peripherals.GPIO3);
+        .with_cs(peripherals.GPIO1)
+        .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
         let buf = dma_tx_buffer!(480 * 3 * 10).unwrap(); // 10 lines
         let commander = ili9488::Commander::new(bus, buf);
         ili9488::Display::<ili9488::Rgb888>::new(commander).unwrap()
     };
+    let orientation = ili9488::Orientation {
+        flip_x: true,
+        flip_y: true,
+        rotate: true,
+    };
+    display.set_orientation(orientation).unwrap();
 
     println!("initializing SPIs...");
     let sd_spi = {
@@ -117,11 +130,11 @@ fn run() -> Result<(), Error> {
     let rng = Rng::new(peripherals.RNG);
     let device = DeviceImpl::new(sd_spi, io_uart, rng)?;
     let config = RuntimeConfig {
-        id: None,
-        // id: Some(FullID::new(
-        //     "lux".try_into().unwrap(),
-        //     "snek".try_into().unwrap(),
-        // )),
+        // id: None,
+        id: Some(FullID::new(
+            "lux".try_into().unwrap(),
+            "snek".try_into().unwrap(),
+        )),
         device,
         display,
         net_handler: NetHandler::None,
