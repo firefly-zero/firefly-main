@@ -14,6 +14,7 @@ use esp_hal::{
         LcdCam,
     },
     prelude::*,
+    rng::Rng,
     spi::master::Spi,
 };
 use esp_println::println;
@@ -86,6 +87,9 @@ fn run() -> Result<(), Error> {
         let miso = peripherals.GPIO7;
         let mosi = peripherals.GPIO16;
         let cs = Output::new(peripherals.GPIO17, Level::High);
+        let pwr = peripherals.GPIO47;
+        Output::new(pwr, Level::High);
+        Delay::new().delay_millis(10);
 
         let spi = Spi::new_with_config(
             peripherals.SPI2,
@@ -117,8 +121,12 @@ fn run() -> Result<(), Error> {
         ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
     };
 
+    println!("waiting for IO to start...");
+    Delay::new().delay_millis(1000);
+
     println!("initializing device...");
-    let device = DeviceImpl::new(sd_spi, io_spi)?;
+    let rng = Rng::new(peripherals.RNG);
+    let device = DeviceImpl::new(sd_spi, io_spi, rng)?;
     let config = RuntimeConfig {
         id: None,
         // id: Some(FullID::new(
