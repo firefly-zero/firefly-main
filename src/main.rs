@@ -8,7 +8,7 @@ use esp_hal::{
     delay::Delay,
     dma::{Dma, DmaPriority},
     dma_tx_buffer,
-    gpio::{Level, NoPin, Output},
+    gpio::{Level, Output},
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
@@ -16,6 +16,7 @@ use esp_hal::{
     prelude::*,
     rng::Rng,
     spi::master::Spi,
+    uart::Uart,
 };
 use esp_println::println;
 use firefly_hal::DeviceImpl;
@@ -103,22 +104,10 @@ fn run() -> Result<(), Error> {
         .with_mosi(mosi);
         ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
     };
-    let io_spi = {
-        let sclk = peripherals.GPIO6;
-        let miso = peripherals.GPIO5;
-        let mosi = peripherals.GPIO4;
-        let spi = Spi::new_with_config(
-            peripherals.SPI3,
-            esp_hal::spi::master::Config {
-                frequency: 200u32.kHz(),
-                ..esp_hal::spi::master::Config::default()
-            },
-        )
-        .with_sck(sclk)
-        .with_miso(miso)
-        .with_mosi(mosi);
-        let cs = NoPin;
-        ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
+    let io_uart = {
+        let miso = peripherals.GPIO4;
+        let mosi = peripherals.GPIO5;
+        Uart::new(peripherals.UART1, miso, mosi).unwrap()
     };
 
     println!("waiting for IO to start...");
@@ -126,7 +115,7 @@ fn run() -> Result<(), Error> {
 
     println!("initializing device...");
     let rng = Rng::new(peripherals.RNG);
-    let device = DeviceImpl::new(sd_spi, io_spi, rng)?;
+    let device = DeviceImpl::new(sd_spi, io_uart, rng)?;
     let config = RuntimeConfig {
         id: None,
         // id: Some(FullID::new(
