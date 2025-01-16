@@ -47,7 +47,7 @@ fn run() -> Result<(), Error> {
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
     println!("initializing display...");
-    let mut display = {
+    let display = {
         let tx_pins = TxSixteenBits::new(
             peripherals.GPIO9,
             peripherals.GPIO10,
@@ -86,14 +86,20 @@ fn run() -> Result<(), Error> {
         .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
         let buf = dma_tx_buffer!(480 * 3 * 10).unwrap(); // 10 lines
         let commander = ili9488::Commander::new(bus, buf);
-        ili9488::Display::<ili9488::Rgb888>::new(commander).unwrap()
+        let mut display = ili9488::Display::<ili9488::Rgb888>::new(commander).unwrap();
+        let orientation = ili9488::Orientation {
+            flip_x: true,
+            flip_y: true,
+            rotate: true,
+        };
+        display.set_orientation(orientation).unwrap();
+        display
+        // ili9488::Scaler {
+        //     display,
+        //     x: 2,
+        //     y: 1,
+        // }
     };
-    let orientation = ili9488::Orientation {
-        flip_x: true,
-        flip_y: true,
-        rotate: true,
-    };
-    display.set_orientation(orientation).unwrap();
 
     println!("initializing SPIs...");
     let sd_spi = {
@@ -129,19 +135,28 @@ fn run() -> Result<(), Error> {
     println!("initializing device...");
     let rng = Rng::new(peripherals.RNG);
     let device = DeviceImpl::new(sd_spi, io_uart, rng)?;
-    let config = RuntimeConfig {
+    let mut config = RuntimeConfig {
         // id: None,
         id: Some(FullID::new(
-            "lux".try_into().unwrap(),
-            "snek".try_into().unwrap(),
+            "sys".try_into().unwrap(),
+            "input-test".try_into().unwrap(),
         )),
         device,
         display,
         net_handler: NetHandler::None,
     };
     println!("creating runtime...");
-    let runtime = Runtime::new(config)?;
     println!("running...");
-    runtime.run()?;
-    Ok(())
+    loop {
+        let mut runtime = Runtime::new(config)?;
+        runtime.start()?;
+        loop {
+            let exit = runtime.update()?;
+            // Exit requested. Finalize runtime and get ownership of the device back.
+            if exit {
+                config = runtime.finalize()?;
+                break;
+            }
+        }
+    }
 }
