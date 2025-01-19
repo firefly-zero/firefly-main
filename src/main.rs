@@ -138,8 +138,8 @@ fn run() -> Result<(), Error> {
     let mut config = RuntimeConfig {
         // id: None,
         id: Some(FullID::new(
-            "sys".try_into().unwrap(),
-            "input-test".try_into().unwrap(),
+            "lux".try_into().unwrap(),
+            "snek".try_into().unwrap(),
         )),
         device,
         display,
