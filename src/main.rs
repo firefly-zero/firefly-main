@@ -84,21 +84,10 @@ fn run() -> Result<(), Error> {
         )
         .with_cs(peripherals.GPIO1)
         .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
-        let buf = dma_tx_buffer!(480 * 3 * 10).unwrap(); // 10 lines
-        let commander = ili9488::Commander::new(bus, buf);
-        let mut display = ili9488::Display::<ili9488::Rgb888>::new(commander).unwrap();
-        let orientation = ili9488::Orientation {
-            flip_x: true,
-            flip_y: true,
-            rotate: true,
-        };
-        display.set_orientation(orientation).unwrap();
-        display
-        // ili9488::Scaler {
-        //     display,
-        //     x: 2,
-        //     y: 1,
-        // }
+        let buf1 = dma_tx_buffer!(480 * 4).unwrap();
+        let buf2 = dma_tx_buffer!(480 * 4).unwrap();
+        let writer = ili9488::Writer::new(bus, buf1, buf2);
+        ili9488::Display3::new(writer).unwrap()
     };
 
     println!("initializing SPIs...");
