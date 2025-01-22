@@ -5,23 +5,24 @@ extern crate alloc;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
 use esp_hal::{
+    clock::CpuClock,
     delay::Delay,
-    dma::{Dma, DmaPriority},
     dma_tx_buffer,
     gpio::{Level, Output},
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
     },
-    prelude::*,
     rng::Rng,
     spi::master::Spi,
     uart::Uart,
+    xtensa_lx_rt::entry,
 };
 use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
 use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
+use fugit::{ExtU64, RateExtU32};
 
 #[entry]
 fn main() -> ! {
@@ -33,7 +34,7 @@ fn main() -> ! {
     println!("end");
     let delay = Delay::new();
     loop {
-        delay.delay(500.millis());
+        delay.delay(500u64.millis());
     }
 }
 
@@ -73,15 +74,13 @@ fn run() -> Result<(), Error> {
         rst.set_high();
 
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
-        let dma = Dma::new(peripherals.DMA);
-        let dma_channel = dma.channel0.configure(false, DmaPriority::Priority0);
         let bus = I8080::new(
             lcd_cam.lcd,
-            dma_channel.tx,
+            peripherals.DMA_CH0,
             tx_pins,
-            20.MHz(),
             esp_hal::lcd_cam::lcd::i8080::Config::default(),
         )
+        .unwrap()
         .with_cs(peripherals.GPIO1)
         .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
@@ -100,22 +99,23 @@ fn run() -> Result<(), Error> {
         Output::new(pwr, Level::High);
         Delay::new().delay_millis(10);
 
-        let spi = Spi::new_with_config(
-            peripherals.SPI2,
-            esp_hal::spi::master::Config {
-                frequency: 200u32.kHz(),
-                ..esp_hal::spi::master::Config::default()
-            },
-        )
-        .with_sck(sclk)
-        .with_miso(miso)
-        .with_mosi(mosi);
+        let mut spi_config = esp_hal::spi::master::Config::default();
+        spi_config.frequency = 200u32.kHz();
+        let spi = Spi::new(peripherals.SPI2, spi_config)
+            .unwrap()
+            .with_sck(sclk)
+            .with_miso(miso)
+            .with_mosi(mosi);
         ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
     };
     let io_uart = {
         let miso = peripherals.GPIO4;
         let mosi = peripherals.GPIO5;
-        Uart::new(peripherals.UART1, miso, mosi).unwrap()
+        let uart_config = esp_hal::uart::Config::default();
+        Uart::new(peripherals.UART1, uart_config)
+            .unwrap()
+            .with_rx(miso)
+            .with_tx(mosi)
     };
 
     println!("waiting for IO to start...");
