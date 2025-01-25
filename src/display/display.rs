@@ -12,11 +12,11 @@ const COLOR_BYTES: usize = 2;
 const SCALE_Y: u8 = 2;
 const SCALE_X: u8 = 2;
 
-pub struct Display3<'a> {
+pub struct Display<'a> {
     writer: Writer<'a>,
 }
 
-impl OriginDimensions for Display3<'_> {
+impl OriginDimensions for Display<'_> {
     fn size(&self) -> Size {
         Size {
             width: u32::from(Self::WIDTH),
@@ -25,7 +25,7 @@ impl OriginDimensions for Display3<'_> {
     }
 }
 
-impl<'a> Display3<'a> {
+impl<'a> Display<'a> {
     /// Pixels in a row (OX).
     pub const WIDTH: u16 = REAL_WIDTH / 2;
     /// Pixels in a column (OY).
@@ -84,7 +84,7 @@ impl<'a> Display3<'a> {
     }
 }
 
-impl DrawTarget for Display3<'_> {
+impl DrawTarget for Display<'_> {
     type Color = Rgb565;
     type Error = Error;
 

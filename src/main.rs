@@ -86,7 +86,7 @@ fn run() -> Result<(), Error> {
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
         let buf2 = dma_tx_buffer!(480 * 4).unwrap();
         let writer = Writer::new(bus, buf1, buf2);
-        Display3::new(writer).unwrap()
+        Display::new(writer).unwrap()
     };
 
     println!("initializing SPIs...");

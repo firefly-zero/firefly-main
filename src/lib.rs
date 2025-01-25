@@ -3,5 +3,5 @@
 extern crate alloc;
 mod display;
 mod error;
-pub use display::{Display3, Writer};
+pub use display::{Display, Writer};
 pub use error::*;
