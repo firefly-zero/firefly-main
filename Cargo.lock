@@ -623,6 +623,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "embedded-sdmmc-dev"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ceec3a654b00a4acf9e2788d72b66fc3ba86d91b834586a4ed576324e351e38b"
+dependencies = [
+ "byteorder",
+ "embedded-hal 1.0.0",
+ "embedded-io 0.6.1",
+ "heapless 0.8.0",
+]
+
+[[package]]
 name = "embedded-storage"
 version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -695,9 +707,18 @@ version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c83ca63fd02ca40644ae91ae63362e3a6e7f53458f6c1356decf892343d2418"
 dependencies = [
- "esp-build",
+ "esp-build 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "esp-println",
  "semihosting",
+]
+
+[[package]]
+name = "esp-build"
+version = "0.2.0"
+dependencies = [
+ "quote",
+ "syn",
+ "termcolor",
 ]
 
 [[package]]
@@ -714,8 +735,6 @@ dependencies = [
 [[package]]
 name = "esp-config"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bd428a3b4b2975772f24eabea123d45cf6a5e28020396ed5dcb331ee3a904046"
 dependencies = [
  "document-features",
 ]
@@ -723,8 +742,6 @@ dependencies = [
 [[package]]
 name = "esp-hal"
 version = "0.23.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a573175c540fd1d21a9cf07b0dee286b5a8f4cfde4b35da0f4f4657de7942c45"
 dependencies = [
  "basic-toml",
  "bitfield",
@@ -747,7 +764,7 @@ dependencies = [
  "embedded-io 0.6.1",
  "embedded-io-async",
  "enumset",
- "esp-build",
+ "esp-build 0.2.0",
  "esp-config",
  "esp-hal-procmacros",
  "esp-metadata",
@@ -773,8 +790,6 @@ dependencies = [
 [[package]]
 name = "esp-hal-procmacros"
 version = "0.16.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4a3297005c2b31cd00e2ba50037edc9bddf99da3afe1c97a2d1b0165a312eab"
 dependencies = [
  "darling",
  "document-features",
@@ -790,8 +805,6 @@ dependencies = [
 [[package]]
 name = "esp-metadata"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fb15c17e50f4cccb0d88305c19eae2d5533d750f0a05b6a05f1c99864974758e"
 dependencies = [
  "anyhow",
  "basic-toml",
@@ -806,7 +819,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "645e54eb592ca0a3d60213b1695e2a5fc0b51ca6d693c08d6983857224a629ed"
 dependencies = [
  "critical-section",
- "esp-build",
+ "esp-build 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "portable-atomic",
 ]
@@ -814,8 +827,6 @@ dependencies = [
 [[package]]
 name = "esp-riscv-rt"
 version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "94aca65db6157aa5f42d9df6595b21462f28207ca4230b799aa3620352ef6a72"
 dependencies = [
  "document-features",
  "riscv",
@@ -875,7 +886,7 @@ dependencies = [
  "embedded-hal 1.0.0",
  "embedded-hal-bus",
  "embedded-io 0.6.1",
- "embedded-sdmmc",
+ "embedded-sdmmc-dev",
  "esp-hal",
  "esp-println",
  "firefly-types 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2518,8 +2529,6 @@ dependencies = [
 [[package]]
 name = "xtensa-lx"
 version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51cbb46c78cfd284c9378070ab90bae9d14d38b3766cb853a97c0a137f736d5b"
 dependencies = [
  "critical-section",
  "document-features",
@@ -2528,8 +2537,6 @@ dependencies = [
 [[package]]
 name = "xtensa-lx-rt"
 version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "689c2ef159d9cd4fc9503603e9999968a84a30db9bde0f0f880d0cceea0190a9"
 dependencies = [
  "anyhow",
  "document-features",
@@ -2546,8 +2553,6 @@ dependencies = [
 [[package]]
 name = "xtensa-lx-rt-proc-macros"
 version = "0.2.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "11277b1e4cbb7ffe44678c668518b249c843c81df249b8f096701757bc50d7ee"
 dependencies = [
  "darling",
  "proc-macro2",
