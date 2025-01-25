@@ -112,8 +112,8 @@ impl DrawTarget for Display<'_> {
         let size = self.set_bounds(&area)?;
         let n_pixels = (size.width * size.height / u32::from(SCALE_Y)) as usize;
         let mut buf = self.writer.take_buffer()?;
-        let mut bytes = buf.as_mut_slice();
-        let bytes_len = bytes.len();
+        let bytes_len = (size.width * 4) as usize;
+        let mut bytes = &mut buf.as_mut_slice()[..bytes_len];
         let half_len = bytes_len / 2;
         let mut first = true;
         let mut cursor = 0;
@@ -131,7 +131,7 @@ impl DrawTarget for Display<'_> {
                         self.writer.send_data(RAMWRC as u16, buf)?;
                     }
                     buf = self.writer.take_buffer()?;
-                    bytes = buf.as_mut_slice();
+                    bytes = &mut buf.as_mut_slice()[..bytes_len];
                     cursor = 0;
                 }
                 bytes[cursor] = raw[0];
