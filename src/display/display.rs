@@ -153,7 +153,17 @@ impl DrawTarget for Display<'_> {
     }
 
     fn fill_solid(&mut self, area: &Rectangle, color: Self::Color) -> Result<(), Self::Error> {
-        let size = self.set_bounds(area)?;
+        let area = Rectangle {
+            top_left: Point {
+                x: area.top_left.x * i32::from(SCALE_X),
+                y: area.top_left.y * i32::from(SCALE_Y),
+            },
+            size: Size {
+                width: area.size.width * u32::from(SCALE_X),
+                height: area.size.height * u32::from(SCALE_Y),
+            },
+        };
+        let size = self.set_bounds(&area)?;
         self.writer.wait()?;
         let buf = self.fill_buffer(color)?;
         let bytes_len = buf.capacity();
