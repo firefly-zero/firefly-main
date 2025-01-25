@@ -85,8 +85,8 @@ fn run() -> Result<(), Error> {
         .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
         let buf2 = dma_tx_buffer!(480 * 4).unwrap();
-        let writer = ili9488::Writer::new(bus, buf1, buf2);
-        ili9488::Display3::new(writer).unwrap()
+        let writer = Writer::new(bus, buf1, buf2);
+        Display3::new(writer).unwrap()
     };
 
     println!("initializing SPIs...");

@@ -23,7 +23,6 @@ embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
 # https://github.com/rust-embedded-community/embedded-sdmmc-rs/issues/168
 embedded-sdmmc = { git = "https://github.com/rust-embedded-community/embedded-sdmmc-rs" }
-ili9488 = { path = "/home/gram/my/ili9488" }
 fugit = "0.3.7"
 
 [profile.release]
