@@ -21,12 +21,12 @@ use esp_hal::{
 use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
-use firefly_runtime::{FullID, NetHandler, Runtime, RuntimeConfig};
+use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 use fugit::{ExtU64, RateExtU32};
 
 #[entry]
 fn main() -> ! {
-    esp_alloc::heap_allocator!(200 * 1024);
+    esp_alloc::heap_allocator!(280 * 1024);
     let res = run();
     if let Err(err) = res {
         println!("ERROR: {err}");
@@ -125,11 +125,7 @@ fn run() -> Result<(), Error> {
     let rng = Rng::new(peripherals.RNG);
     let device = DeviceImpl::new(sd_spi, io_uart, rng)?;
     let mut config = RuntimeConfig {
-        // id: None,
-        id: Some(FullID::new(
-            "lux".try_into().unwrap(),
-            "snek".try_into().unwrap(),
-        )),
+        id: None,
         device,
         display,
         net_handler: NetHandler::None,
