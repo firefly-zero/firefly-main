@@ -15,6 +15,7 @@ esp-backtrace = { version = "0.15.0", features = [
 ] }
 esp-hal = { version = "0.23.1", path = "/home/gram/gh/esp-hal/esp-hal", features = [
     "esp32s3",
+    "unstable",
 ] }
 esp-println = { version = "0.13.0", features = ["esp32s3"] }
 esp-alloc = { version = "0.6.0" }

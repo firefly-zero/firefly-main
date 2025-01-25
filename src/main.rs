@@ -8,7 +8,7 @@ use esp_hal::{
     clock::CpuClock,
     delay::Delay,
     dma_tx_buffer,
-    gpio::{Level, Output},
+    gpio::{Level, Output, OutputConfig},
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
@@ -70,7 +70,8 @@ fn run() -> Result<(), Error> {
 
         // hardware reset
         let rst = peripherals.GPIO46;
-        let mut rst = Output::new(rst, Level::Low);
+        let low = OutputConfig::default();
+        let mut rst = Output::new(rst, low).unwrap();
         rst.set_high();
 
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
@@ -94,9 +95,10 @@ fn run() -> Result<(), Error> {
         let sclk = peripherals.GPIO15;
         let miso = peripherals.GPIO7;
         let mosi = peripherals.GPIO16;
-        let cs = Output::new(peripherals.GPIO17, Level::High);
+        let high = OutputConfig::default().with_level(Level::High);
+        let cs = Output::new(peripherals.GPIO17, high).unwrap();
         let pwr = peripherals.GPIO47;
-        Output::new(pwr, Level::High);
+        Output::new(pwr, high).unwrap();
         Delay::new().delay_millis(10);
 
         let mut spi_config = esp_hal::spi::master::Config::default();
