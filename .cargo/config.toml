@@ -3,10 +3,10 @@ runner = "espflash flash --monitor"
 
 [env]
 ESP_LOG = "ERROR"
+ESP_HAL_CONFIG_PSRAM_MODE = "octal"
 
 [build]
 rustflags = ["-C", "link-arg=-nostartfiles"]
-
 target = "xtensa-esp32s3-none-elf"
 
 [unstable]

@@ -24,6 +24,15 @@ use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 use fugit::{ExtU64, RateExtU32};
 
+/// Initialize PSRAM and add it as a heap memory region
+fn init_psram_heap(start: *mut u8, size: usize) {
+    let capabilities = esp_alloc::MemoryCapability::External.into();
+    unsafe {
+        let region = esp_alloc::HeapRegion::new(start, size, capabilities);
+        esp_alloc::HEAP.add_region(region);
+    }
+}
+
 #[entry]
 fn main() -> ! {
     esp_alloc::heap_allocator!(280 * 1024);
@@ -44,6 +53,8 @@ fn run() -> Result<(), Error> {
     config.cpu_clock = CpuClock::max();
     println!("initializing peripherals...");
     let peripherals = esp_hal::init(config);
+    let (start, size) = esp_hal::psram::psram_raw_parts(&peripherals.PSRAM);
+    init_psram_heap(start, size);
     // println!("initializing UART...");
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
