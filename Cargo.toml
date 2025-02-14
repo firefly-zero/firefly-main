@@ -13,7 +13,7 @@ esp-backtrace = { version = "0.15.0", features = [
     "panic-handler",
     "println",
 ] }
-esp-hal = { version = "0.23.1", path = "/home/gram/gh/esp-hal/esp-hal", features = [
+esp-hal = { version = "0.23.1", git = "https://github.com/esp-rs/esp-hal.git", features = [
     "esp32s3",
     "psram",
     "unstable",
@@ -23,9 +23,9 @@ esp-alloc = { version = "0.6.0" }
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
-# https://github.com/rust-embedded-community/embedded-sdmmc-rs/issues/168
-embedded-sdmmc = { git = "https://github.com/rust-embedded-community/embedded-sdmmc-rs" }
-fugit = "0.3.7"
+# A temporary fork of the latest dev version of embedded-sdmmc.
+# We'll switch to upstream when they push to crate the version >0.8.1.
+embedded_sdmmc = { version = "0.8.2", default-features = false, package = "embedded-sdmmc-dev" }
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.

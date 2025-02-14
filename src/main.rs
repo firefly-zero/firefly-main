@@ -4,6 +4,7 @@ extern crate alloc;
 
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
+use esp_hal::time::Rate;
 use esp_hal::{
     clock::CpuClock,
     delay::Delay,
@@ -22,7 +23,6 @@ use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
-use fugit::{ExtU64, RateExtU32};
 
 /// Initialize PSRAM and add it as a heap memory region
 fn init_psram_heap(start: *mut u8, size: usize) {
@@ -43,14 +43,13 @@ fn main() -> ! {
     println!("end");
     let delay = Delay::new();
     loop {
-        delay.delay(500u64.millis());
+        delay.delay(esp_hal::time::Duration::from_millis(500u64));
     }
 }
 
 fn run() -> Result<(), Error> {
     println!("creating device config...");
-    let mut config = esp_hal::Config::default();
-    config.cpu_clock = CpuClock::max();
+    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     println!("initializing peripherals...");
     let peripherals = esp_hal::init(config);
     let (start, size) = esp_hal::psram::psram_raw_parts(&peripherals.PSRAM);
@@ -81,8 +80,7 @@ fn run() -> Result<(), Error> {
 
         // hardware reset
         let rst = peripherals.GPIO46;
-        let low = OutputConfig::default();
-        let mut rst = Output::new(rst, low).unwrap();
+        let mut rst = Output::new(rst, Level::Low, OutputConfig::default());
         rst.set_high();
 
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
@@ -106,14 +104,13 @@ fn run() -> Result<(), Error> {
         let sclk = peripherals.GPIO15;
         let miso = peripherals.GPIO7;
         let mosi = peripherals.GPIO16;
-        let high = OutputConfig::default().with_level(Level::High);
-        let cs = Output::new(peripherals.GPIO17, high).unwrap();
+        let cs = Output::new(peripherals.GPIO17, Level::High, OutputConfig::default());
         let pwr = peripherals.GPIO47;
-        Output::new(pwr, high).unwrap();
+        Output::new(pwr, Level::High, OutputConfig::default());
         Delay::new().delay_millis(10);
 
-        let mut spi_config = esp_hal::spi::master::Config::default();
-        spi_config.frequency = 200u32.kHz();
+        let spi_config =
+            esp_hal::spi::master::Config::default().with_frequency(Rate::from_khz(200u32));
         let spi = Spi::new(peripherals.SPI2, spi_config)
             .unwrap()
             .with_sck(sclk)
