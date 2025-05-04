@@ -2,17 +2,25 @@
 #![no_main]
 extern crate alloc;
 
+use core::cell::RefCell;
 use core::ptr::addr_of_mut;
 
+use alloc::rc::Rc;
+use embedded_graphics::draw_target::DrawTarget;
+use embedded_graphics::pixelcolor::Rgb565;
+use embedded_graphics::prelude::RgbColor;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
 use esp_hal::otg_fs::{Usb, UsbBus};
-use esp_hal::time::Rate;
+use esp_hal::time::{Duration, Rate};
+use esp_hal::timer::systimer::SystemTimer;
+use esp_hal::timer::PeriodicTimer;
 use esp_hal::{
     clock::CpuClock,
     delay::Delay,
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
+    handler,
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
@@ -27,6 +35,7 @@ use firefly_hal::DeviceImpl;
 use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 use usb_device::bus::UsbBusAllocator;
+use usb_device::device::UsbDevice;
 use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
 use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
@@ -41,8 +50,11 @@ fn init_psram_heap(start: *mut u8, size: usize) {
 
 static mut EP_MEMORY: [u32; 1024] = [0; 1024];
 
-type UsbSerial = UsbBusAllocator<UsbBus<Usb<'static>>>;
-static mut USB_BUS: Option<UsbSerial> = None;
+type UsbBusAlloc = UsbBusAllocator<UsbBus<Usb<'static>>>;
+static mut USB_BUS: Option<UsbBusAlloc> = None;
+type UsbSerial = SerialPort<'static, UsbBus<Usb<'static>>>;
+static mut USB_SERIAL: Option<Rc<RefCell<UsbSerial>>> = None;
+static mut USB_DEVICE: Option<UsbDevice<'static, UsbBus<Usb<'static>>>> = None;
 
 #[entry]
 fn main() -> ! {
@@ -69,7 +81,7 @@ fn run() -> Result<(), Error> {
     // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
     println!("initializing display...");
-    let display = {
+    let mut display = {
         let tx_pins = TxSixteenBits::new(
             peripherals.GPIO9,
             peripherals.GPIO10,
@@ -109,6 +121,7 @@ fn run() -> Result<(), Error> {
         let writer = Writer::new(bus, buf1, buf2);
         Display::new(writer).unwrap()
     };
+    display.clear(Rgb565::BLUE);
 
     println!("initializing SPIs...");
     let sd_spi = {
@@ -139,27 +152,31 @@ fn run() -> Result<(), Error> {
             .with_tx(mosi)
     };
 
+    display.clear(Rgb565::RED);
+
     let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
     let usb_bus = UsbBus::new(usb, unsafe { &mut *addr_of_mut!(EP_MEMORY) });
     unsafe { USB_BUS = Some(usb_bus) };
     let usb_bus = unsafe { USB_BUS.as_ref().unwrap() };
     let mut usb_serial = SerialPort::new(usb_bus);
-    let mut usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x303A, 0x3001))
+    // let usb_serial = Rc::new(RefCell::new(usb_serial));
+    // unsafe { USB_SERIAL = Some(Rc::clone(&usb_serial)) };
+    let vid_pid = UsbVidPid(0x303A, 0x3001); // Vendor: Espressif Incorporated
+    let mut usb_dev = UsbDeviceBuilder::new(usb_bus, vid_pid)
         .device_class(USB_CLASS_CDC)
         .build();
-
-    usb_dev.poll(&mut [&mut usb_serial]);
-    let mut buf = [0u8; 64];
-    let Ok(count) = usb_serial.read(&mut buf) else {
-        todo!();
-    };
+    // unsafe { USB_DEVICE = Some(usb_dev) };
+    // let syst = SystemTimer::new(peripherals.SYSTIMER);
+    // let mut timer = PeriodicTimer::new(syst.alarm0);
+    // timer.set_interrupt_handler(handle_usb_poll);
+    // timer.start(Duration::from_millis(5)).unwrap();
 
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
 
     println!("initializing device...");
     let rng = Rng::new(peripherals.RNG);
-    let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
+    let device = DeviceImpl::new(sd_spi, io_uart, usb_dev, usb_serial, rng)?;
     let mut config = RuntimeConfig {
         id: None,
         device,
@@ -168,6 +185,7 @@ fn run() -> Result<(), Error> {
     };
     println!("creating runtime...");
     println!("running...");
+    config.display.clear(Rgb565::GREEN);
     loop {
         let mut runtime = Runtime::new(config)?;
         runtime.start()?;
@@ -178,6 +196,26 @@ fn run() -> Result<(), Error> {
                 config = runtime.finalize()?;
                 break;
             }
+            runtime.display_mut().clear(Rgb565::WHITE);
         }
     }
 }
+
+// #[handler]
+// fn handle_usb_poll() {
+//     unsafe {
+//         let serial = &mut USB_SERIAL.as_mut().unwrap();
+//         let Some(serial) = Rc::get_mut(serial) else {
+//             return;
+//         };
+//         let serial = serial.get_mut();
+//         let device = USB_DEVICE.as_mut().unwrap();
+//         device.poll(&mut [serial]);
+
+//         // let pending = device.poll(&mut [serial]);
+//         // if pending {
+//         //     let mut buf = [0u8; 64];
+//         //     _ = serial.read(&mut buf);
+//         // }
+//     };
+// }

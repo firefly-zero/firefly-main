@@ -18,7 +18,10 @@ esp-hal = { version = "0.23.1", git = "https://github.com/esp-rs/esp-hal.git", f
     "psram",
     "unstable",
 ] }
-esp-println = { version = "0.13.0", features = ["esp32s3"] }
+esp-println = { version = "0.13.0", features = [
+    "esp32s3",
+    "uart",
+], default-features = false }
 esp-alloc = { version = "0.6.0" }
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
@@ -26,6 +29,8 @@ embedded-hal-bus = "0.3.0"
 # A temporary fork of the latest dev version of embedded-sdmmc.
 # We'll switch to upstream when they push to crate the version >0.8.1.
 embedded_sdmmc = { version = "0.8.2", default-features = false, package = "embedded-sdmmc-dev" }
+usbd-serial = "0.2.2"
+usb-device = "0.3.2"
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.
