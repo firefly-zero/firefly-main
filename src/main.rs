@@ -2,26 +2,15 @@
 #![no_main]
 extern crate alloc;
 
-use core::cell::RefCell;
-use core::ptr::addr_of_mut;
-
-use alloc::rc::Rc;
-use embedded_graphics::draw_target::DrawTarget;
-use embedded_graphics::pixelcolor::Rgb565;
-use embedded_graphics::prelude::RgbColor;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
-use esp_hal::otg_fs::{Usb, UsbBus};
-use esp_hal::time::{Duration, Rate};
-use esp_hal::timer::systimer::SystemTimer;
-use esp_hal::timer::PeriodicTimer;
+use esp_hal::time::Rate;
 use esp_hal::usb_serial_jtag::UsbSerialJtag;
 use esp_hal::{
     clock::CpuClock,
     delay::Delay,
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
-    handler,
     lcd_cam::{
         lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
@@ -66,11 +55,9 @@ fn run() -> Result<(), Error> {
     let peripherals = esp_hal::init(config);
     let (start, size) = esp_hal::psram::psram_raw_parts(&peripherals.PSRAM);
     init_psram_heap(start, size);
-    // println!("initializing UART...");
-    // let uart = Uart::new(peripherals.UART1, peripherals.GPIO1, peripherals.GPIO2)?;
 
     println!("initializing display...");
-    let mut display = {
+    let display = {
         let tx_pins = TxSixteenBits::new(
             peripherals.GPIO9,
             peripherals.GPIO10,
@@ -110,7 +97,6 @@ fn run() -> Result<(), Error> {
         let writer = Writer::new(bus, buf1, buf2);
         Display::new(writer).unwrap()
     };
-    display.clear(Rgb565::BLUE);
 
     println!("initializing SPIs...");
     let sd_spi = {
@@ -140,10 +126,7 @@ fn run() -> Result<(), Error> {
             .with_rx(miso)
             .with_tx(mosi)
     };
-
-    display.clear(Rgb565::RED);
-
-    let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
+    let usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
 
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
@@ -159,7 +142,6 @@ fn run() -> Result<(), Error> {
     };
     println!("creating runtime...");
     println!("running...");
-    config.display.clear(Rgb565::GREEN);
     loop {
         let mut runtime = Runtime::new(config)?;
         runtime.start()?;
