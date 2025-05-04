@@ -2,8 +2,11 @@
 #![no_main]
 extern crate alloc;
 
+use core::ptr::addr_of_mut;
+
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
+use esp_hal::otg_fs::{Usb, UsbBus};
 use esp_hal::time::Rate;
 use esp_hal::{
     clock::CpuClock,
@@ -23,6 +26,9 @@ use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
+use usb_device::bus::UsbBusAllocator;
+use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
+use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
 /// Initialize PSRAM and add it as a heap memory region
 fn init_psram_heap(start: *mut u8, size: usize) {
@@ -32,6 +38,11 @@ fn init_psram_heap(start: *mut u8, size: usize) {
         esp_alloc::HEAP.add_region(region);
     }
 }
+
+static mut EP_MEMORY: [u32; 1024] = [0; 1024];
+
+type UsbSerial = UsbBusAllocator<UsbBus<Usb<'static>>>;
+static mut USB_BUS: Option<UsbSerial> = None;
 
 #[entry]
 fn main() -> ! {
@@ -128,12 +139,27 @@ fn run() -> Result<(), Error> {
             .with_tx(mosi)
     };
 
+    let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
+    let usb_bus = UsbBus::new(usb, unsafe { &mut *addr_of_mut!(EP_MEMORY) });
+    unsafe { USB_BUS = Some(usb_bus) };
+    let usb_bus = unsafe { USB_BUS.as_ref().unwrap() };
+    let mut usb_serial = SerialPort::new(usb_bus);
+    let mut usb_dev = UsbDeviceBuilder::new(usb_bus, UsbVidPid(0x303A, 0x3001))
+        .device_class(USB_CLASS_CDC)
+        .build();
+
+    usb_dev.poll(&mut [&mut usb_serial]);
+    let mut buf = [0u8; 64];
+    let Ok(count) = usb_serial.read(&mut buf) else {
+        todo!();
+    };
+
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
 
     println!("initializing device...");
     let rng = Rng::new(peripherals.RNG);
-    let device = DeviceImpl::new(sd_spi, io_uart, rng)?;
+    let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
     let mut config = RuntimeConfig {
         id: None,
         device,
