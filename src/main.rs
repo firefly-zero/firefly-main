@@ -15,6 +15,7 @@ use esp_hal::otg_fs::{Usb, UsbBus};
 use esp_hal::time::{Duration, Rate};
 use esp_hal::timer::systimer::SystemTimer;
 use esp_hal::timer::PeriodicTimer;
+use esp_hal::usb_serial_jtag::UsbSerialJtag;
 use esp_hal::{
     clock::CpuClock,
     delay::Delay,
@@ -34,10 +35,6 @@ use esp_println::println;
 use firefly_hal::DeviceImpl;
 use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
-use usb_device::bus::UsbBusAllocator;
-use usb_device::device::UsbDevice;
-use usb_device::prelude::{UsbDeviceBuilder, UsbVidPid};
-use usbd_serial::{SerialPort, USB_CLASS_CDC};
 
 /// Initialize PSRAM and add it as a heap memory region
 fn init_psram_heap(start: *mut u8, size: usize) {
@@ -47,14 +44,6 @@ fn init_psram_heap(start: *mut u8, size: usize) {
         esp_alloc::HEAP.add_region(region);
     }
 }
-
-static mut EP_MEMORY: [u32; 1024] = [0; 1024];
-
-type UsbBusAlloc = UsbBusAllocator<UsbBus<Usb<'static>>>;
-static mut USB_BUS: Option<UsbBusAlloc> = None;
-type UsbSerial = SerialPort<'static, UsbBus<Usb<'static>>>;
-static mut USB_SERIAL: Option<Rc<RefCell<UsbSerial>>> = None;
-static mut USB_DEVICE: Option<UsbDevice<'static, UsbBus<Usb<'static>>>> = None;
 
 #[entry]
 fn main() -> ! {
@@ -154,29 +143,14 @@ fn run() -> Result<(), Error> {
 
     display.clear(Rgb565::RED);
 
-    let usb = Usb::new(peripherals.USB0, peripherals.GPIO20, peripherals.GPIO19);
-    let usb_bus = UsbBus::new(usb, unsafe { &mut *addr_of_mut!(EP_MEMORY) });
-    unsafe { USB_BUS = Some(usb_bus) };
-    let usb_bus = unsafe { USB_BUS.as_ref().unwrap() };
-    let mut usb_serial = SerialPort::new(usb_bus);
-    // let usb_serial = Rc::new(RefCell::new(usb_serial));
-    // unsafe { USB_SERIAL = Some(Rc::clone(&usb_serial)) };
-    let vid_pid = UsbVidPid(0x303A, 0x3001); // Vendor: Espressif Incorporated
-    let mut usb_dev = UsbDeviceBuilder::new(usb_bus, vid_pid)
-        .device_class(USB_CLASS_CDC)
-        .build();
-    // unsafe { USB_DEVICE = Some(usb_dev) };
-    // let syst = SystemTimer::new(peripherals.SYSTIMER);
-    // let mut timer = PeriodicTimer::new(syst.alarm0);
-    // timer.set_interrupt_handler(handle_usb_poll);
-    // timer.start(Duration::from_millis(5)).unwrap();
+    let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
 
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
 
     println!("initializing device...");
     let rng = Rng::new(peripherals.RNG);
-    let device = DeviceImpl::new(sd_spi, io_uart, usb_dev, usb_serial, rng)?;
+    let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
     let mut config = RuntimeConfig {
         id: None,
         device,
@@ -196,7 +170,6 @@ fn run() -> Result<(), Error> {
                 config = runtime.finalize()?;
                 break;
             }
-            runtime.display_mut().clear(Rgb565::WHITE);
         }
     }
 }
