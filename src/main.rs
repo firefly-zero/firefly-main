@@ -21,7 +21,7 @@ use esp_hal::{
     xtensa_lx_rt::entry,
 };
 use esp_println::println;
-use firefly_hal::DeviceImpl;
+use firefly_hal::{Device, DeviceImpl};
 use firefly_main::*;
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 
@@ -126,7 +126,8 @@ fn run() -> Result<(), Error> {
             .with_rx(miso)
             .with_tx(mosi)
     };
-    let usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
+    let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
+    _ = usb_serial.write_byte_nb(0x00);
 
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
@@ -140,8 +141,7 @@ fn run() -> Result<(), Error> {
         display,
         net_handler: NetHandler::None,
     };
-    println!("creating runtime...");
-    println!("running...");
+    config.device.log_debug("firmware", "running...");
     loop {
         let mut runtime = Runtime::new(config)?;
         runtime.start()?;
@@ -155,22 +155,3 @@ fn run() -> Result<(), Error> {
         }
     }
 }
-
-// #[handler]
-// fn handle_usb_poll() {
-//     unsafe {
-//         let serial = &mut USB_SERIAL.as_mut().unwrap();
-//         let Some(serial) = Rc::get_mut(serial) else {
-//             return;
-//         };
-//         let serial = serial.get_mut();
-//         let device = USB_DEVICE.as_mut().unwrap();
-//         device.poll(&mut [serial]);
-
-//         // let pending = device.poll(&mut [serial]);
-//         // if pending {
-//         //     let mut buf = [0u8; 64];
-//         //     _ = serial.read(&mut buf);
-//         // }
-//     };
-// }
