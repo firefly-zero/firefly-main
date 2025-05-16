@@ -22,7 +22,54 @@ impl RenderFB for Display<'_> {
     type Error = Error;
 
     fn render_fb(&mut self, frame: &mut FrameBuffer) -> Result<(), Self::Error> {
-        frame.draw(self)
+        const BYTES_LEN: usize = (REAL_WIDTH * 4) as usize;
+        const HALF_LEN: usize = (REAL_WIDTH * 2) as usize;
+
+        self.set_x_bounds(0, i32::from(REAL_WIDTH - 1))?;
+        self.set_y_bounds(0, i32::from(REAL_HEIGHT - 1))?;
+
+        let mut buf = self.writer.take_buffer()?;
+        let mut bytes = &mut buf.as_mut_slice()[..BYTES_LEN];
+        let mut first = true;
+        let mut cursor = 0;
+        for (color1, color2) in frame.iter_pairs() {
+            if cursor == HALF_LEN {
+                let (left, right) = unsafe { bytes.split_at_mut_unchecked(HALF_LEN) };
+                right.copy_from_slice(left);
+                buf.set_length(BYTES_LEN);
+                if first {
+                    self.writer.send_data(RAMWR as u16, buf)?;
+                    first = false;
+                } else {
+                    self.writer.send_data(RAMWRC as u16, buf)?;
+                }
+                buf = self.writer.take_buffer()?;
+                bytes = &mut buf.as_mut_slice()[..BYTES_LEN];
+                cursor = 0;
+            }
+
+            bytes[cursor] = color1.0;
+            bytes[cursor + 1] = color1.1;
+            bytes[cursor + 2] = color1.0;
+            bytes[cursor + 3] = color1.1;
+
+            bytes[cursor + 4] = color2.0;
+            bytes[cursor + 5] = color2.1;
+            bytes[cursor + 6] = color2.0;
+            bytes[cursor + 7] = color2.1;
+            cursor += 8
+        }
+        buf.set_length(cursor);
+        // We must send buffer even if it is empty to return it to the pool.
+        if first {
+            self.writer.send_data(RAMWR as u16, buf)?;
+        } else {
+            self.writer.send_data(RAMWRC as u16, buf)?;
+        }
+        // for _ in 1..SCALE_Y {
+        //     self.writer.send_data(RAMWRC as u16, buf)?;
+        // }
+        Ok(())
     }
 }
 
