@@ -2,6 +2,8 @@ use super::commands::*;
 use super::writer::*;
 use embedded_graphics::{prelude::*, primitives::Rectangle};
 use esp_hal::dma::DmaTxBuf;
+use firefly_runtime::FrameBuffer;
+use firefly_runtime::RenderFB;
 use firefly_runtime::Rgb16;
 
 /// Pixels in a row (OX).
@@ -14,6 +16,14 @@ const SCALE_X: u8 = 2;
 
 pub struct Display<'a> {
     writer: Writer<'a>,
+}
+
+impl RenderFB for Display<'_> {
+    type Error = Error;
+
+    fn render_fb(&mut self, frame: &mut FrameBuffer) -> Result<(), Self::Error> {
+        frame.draw(self)
+    }
 }
 
 impl OriginDimensions for Display<'_> {
