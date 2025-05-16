@@ -1,8 +1,8 @@
 use super::commands::*;
 use super::writer::*;
-use embedded_graphics::pixelcolor::Rgb565;
 use embedded_graphics::{prelude::*, primitives::Rectangle};
 use esp_hal::dma::DmaTxBuf;
+use firefly_runtime::Rgb16;
 
 /// Pixels in a row (OX).
 const REAL_WIDTH: u16 = 480;
@@ -71,8 +71,8 @@ impl<'a> Display<'a> {
         Ok(ep - sp + 1)
     }
 
-    fn fill_buffer(&mut self, color: Rgb565) -> Result<DmaTxBuf, Error> {
-        let raw = dump_color(color);
+    fn fill_buffer(&mut self, color: Rgb16) -> Result<DmaTxBuf, Error> {
+        let raw = [color.0, color.1];
         let mut buf = self.writer.take_buffer()?;
         let bytes = buf.as_mut_slice();
         let bytes_len = bytes.len();
@@ -85,7 +85,7 @@ impl<'a> Display<'a> {
 }
 
 impl DrawTarget for Display<'_> {
-    type Color = Rgb565;
+    type Color = Rgb16;
     type Error = Error;
 
     fn draw_iter<I>(&mut self, _pixels: I) -> Result<(), Self::Error>
@@ -118,7 +118,7 @@ impl DrawTarget for Display<'_> {
         let mut first = true;
         let mut cursor = 0;
         for color in colors.into_iter().take(n_pixels) {
-            let raw = &dump_color(color);
+            let raw = [color.0, color.1];
             for _ in 0..SCALE_X {
                 if cursor >= half_len {
                     let (left, right) = unsafe { bytes.split_at_mut_unchecked(half_len) };
@@ -195,13 +195,4 @@ impl DrawTarget for Display<'_> {
         }
         Ok(())
     }
-}
-
-fn dump_color(c: Rgb565) -> [u8; 2] {
-    let r = u16::from(c.r());
-    let g = u16::from(c.g());
-    let b = u16::from(c.b());
-    let raw = (b << 11) | (g << 5) | r;
-    let raw = raw.to_le_bytes();
-    [!raw[0], !raw[1]]
 }
