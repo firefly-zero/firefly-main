@@ -1,5 +1,5 @@
 pub enum Error {
-    Uart(esp_hal::uart::Error),
+    Uart(&'static str),
     Runtime(firefly_runtime::Error),
     Network(firefly_hal::NetworkError),
     Display,
@@ -18,12 +18,24 @@ impl From<firefly_runtime::Error> for Error {
     }
 }
 
-impl From<esp_hal::uart::Error> for Error {
-    fn from(v: esp_hal::uart::Error) -> Self {
-        Self::Uart(v)
+impl From<esp_hal::uart::RxError> for Error {
+    fn from(value: esp_hal::uart::RxError) -> Self {
+        let msg = match value {
+            esp_hal::uart::RxError::FifoOverflowed => "RX FIFO overflowed",
+            esp_hal::uart::RxError::GlitchOccurred => "glitch on RX line",
+            esp_hal::uart::RxError::FrameFormatViolated => "framing error on RX line",
+            esp_hal::uart::RxError::ParityMismatch => "parity error on RX line",
+            _ => "unknown RX error",
+        };
+        Self::Uart(msg)
     }
 }
 
+impl From<esp_hal::uart::TxError> for Error {
+    fn from(_: esp_hal::uart::TxError) -> Self {
+        Self::Uart("unknown TX error")
+    }
+}
 impl core::fmt::Display for Error {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {

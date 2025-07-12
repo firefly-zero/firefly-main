@@ -36,7 +36,7 @@ fn init_psram_heap(start: *mut u8, size: usize) {
 
 #[entry]
 fn main() -> ! {
-    esp_alloc::heap_allocator!(280 * 1024);
+    esp_alloc::heap_allocator!(size: 280 * 1024);
     let res = run();
     if let Err(err) = res {
         println!("ERROR: {err}");
@@ -92,7 +92,9 @@ fn run() -> Result<(), Error> {
         .unwrap()
         .with_cs(peripherals.GPIO1)
         .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
+        #[expect(clippy::manual_div_ceil)]
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
+        #[expect(clippy::manual_div_ceil)]
         let buf2 = dma_tx_buffer!(480 * 4).unwrap();
         let writer = Writer::new(bus, buf1, buf2);
         Display::new(writer).unwrap()
@@ -109,7 +111,7 @@ fn run() -> Result<(), Error> {
         Delay::new().delay_millis(10);
 
         let spi_config =
-            esp_hal::spi::master::Config::default().with_frequency(Rate::from_khz(200u32));
+            esp_hal::spi::master::Config::default().with_frequency(Rate::from_khz(200));
         let spi = Spi::new(peripherals.SPI2, spi_config)
             .unwrap()
             .with_sck(sclk)
