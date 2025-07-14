@@ -122,7 +122,7 @@ fn run() -> Result<(), Error> {
     let io_uart = {
         let miso = peripherals.GPIO4;
         let mosi = peripherals.GPIO5;
-        let uart_config = esp_hal::uart::Config::default();
+        let uart_config = esp_hal::uart::Config::default().with_baudrate(921_600);
         Uart::new(peripherals.UART1, uart_config)
             .unwrap()
             .with_rx(miso)
