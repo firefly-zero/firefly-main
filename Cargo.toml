@@ -26,9 +26,7 @@ esp-alloc = "0.8.0"
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
-# A temporary fork of the latest dev version of embedded-sdmmc.
-# We'll switch to upstream when they push to crate the version >0.8.1.
-embedded_sdmmc = { version = "0.8.2", default-features = false, package = "embedded-sdmmc-dev" }
+embedded-sdmmc = { version = "0.9.0", default-features = false }
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.
