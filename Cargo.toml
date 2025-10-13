@@ -7,22 +7,22 @@ edition = "2021"
 [dependencies]
 firefly-hal = { path = "../firefly-hal" }
 firefly-runtime = { path = "../firefly/firefly-runtime" }
-esp-backtrace = { version = "0.16.0", features = [
+esp-backtrace = { version = "0.17.0", features = [
     "esp32s3",
     "exception-handler",
     "panic-handler",
     "println",
 ] }
-esp-hal = { version = "1.0.0-beta.1", features = [
+esp-hal = { version = "1.0.0-rc.0", features = [
     "esp32s3",
     "psram",
     "unstable",
 ] }
-esp-println = { version = "0.14.0", features = [
+esp-println = { version = "0.15.0", features = [
     "esp32s3",
     "uart",
 ], default-features = false }
-esp-alloc = { version = "0.8.0" }
+esp-alloc = "0.8.0"
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
