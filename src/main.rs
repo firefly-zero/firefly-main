@@ -110,8 +110,7 @@ fn run() -> Result<(), Error> {
         Output::new(pwr, Level::High, OutputConfig::default());
         Delay::new().delay_millis(10);
 
-        let spi_config =
-            esp_hal::spi::master::Config::default().with_frequency(Rate::from_khz(200));
+        let spi_config = esp_hal::spi::master::Config::default().with_frequency(Rate::from_mhz(4));
         let spi = Spi::new(peripherals.SPI2, spi_config)
             .unwrap()
             .with_sck(sclk)
