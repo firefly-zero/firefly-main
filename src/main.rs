@@ -11,7 +11,7 @@ use esp_hal::{
     delay::Delay,
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
-    lcd_cam::{LcdCam, lcd::i8080::I8080},
+    lcd_cam::{lcd::i8080::I8080, LcdCam},
     rng::Rng,
     spi::master::Spi,
     uart::Uart,
@@ -83,6 +83,7 @@ fn run() -> Result<(), Error> {
             .with_data15(peripherals.GPIO2)
             .with_dc(peripherals.GPIO8)
             .with_wrx(peripherals.GPIO3);
+        // 2 bytes per pixel, 240 pixels per line, 4 lines.
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
         let buf2 = dma_tx_buffer!(480 * 4).unwrap();
         let writer = Writer::new(bus, buf1, buf2);

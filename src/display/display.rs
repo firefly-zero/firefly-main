@@ -44,19 +44,25 @@ impl RenderFB for Display<'_> {
                     self.writer.send_data(RAMWRC as u16, buf)?;
                 }
                 buf = self.writer.take_buffer()?;
-                bytes = &mut buf.as_mut_slice()[..BYTES_LEN];
+                let buf_slice = buf.as_mut_slice();
+                bytes = unsafe { buf_slice.get_unchecked_mut(..BYTES_LEN) };
                 cursor = 0;
             }
 
-            bytes[cursor] = color1.0;
-            bytes[cursor + 1] = color1.1;
-            bytes[cursor + 2] = color1.0;
-            bytes[cursor + 3] = color1.1;
+            // Gotta go fasta! The code is proven to be correct by looking at it
+            // very hard and saying out loud: "Yep, that looks right".
+            // We reset `cursor` at `HALF_LEN`, so it must be within boundaries.
+            unsafe {
+                *bytes.get_unchecked_mut(cursor) = color1.0;
+                *bytes.get_unchecked_mut(cursor + 1) = color1.1;
+                *bytes.get_unchecked_mut(cursor + 2) = color1.0;
+                *bytes.get_unchecked_mut(cursor + 3) = color1.1;
 
-            bytes[cursor + 4] = color2.0;
-            bytes[cursor + 5] = color2.1;
-            bytes[cursor + 6] = color2.0;
-            bytes[cursor + 7] = color2.1;
+                *bytes.get_unchecked_mut(cursor + 4) = color2.0;
+                *bytes.get_unchecked_mut(cursor + 5) = color2.1;
+                *bytes.get_unchecked_mut(cursor + 6) = color2.0;
+                *bytes.get_unchecked_mut(cursor + 7) = color2.1;
+            }
             cursor += 8
         }
         buf.set_length(cursor);
@@ -66,9 +72,6 @@ impl RenderFB for Display<'_> {
         } else {
             self.writer.send_data(RAMWRC as u16, buf)?;
         }
-        // for _ in 1..SCALE_Y {
-        //     self.writer.send_data(RAMWRC as u16, buf)?;
-        // }
         Ok(())
     }
 }
