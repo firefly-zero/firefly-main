@@ -1,7 +1,7 @@
 [package]
 name = "firefly-main"
 version = "0.1.0"
-rust-version = "1.82.0"
+rust-version = "1.89.0"
 edition = "2021"
 
 [dependencies]
@@ -17,7 +17,7 @@ esp-println = { version = "0.16.1", features = [
     "esp32s3",
     "uart",
 ], default-features = false }
-esp-alloc = "0.8.0"
+esp-alloc = "0.9.0"
 critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
