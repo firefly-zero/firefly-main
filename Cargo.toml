@@ -1,11 +1,11 @@
 [package]
 name = "firefly-main"
 version = "0.1.0"
-rust-version = "1.84.0"
-edition = "2021"
+rust-version = "1.89.0"
+edition = "2024"
 
 [dependencies]
-firefly-hal = { path = "../firefly-hal" }
+firefly-hal = "0.3.0"
 firefly-runtime = { path = "../firefly/firefly-runtime" }
 esp-backtrace = { version = "0.17.0", features = [
     "esp32s3",
@@ -27,6 +27,11 @@ critical-section = "1.2.0"
 embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
 embedded-sdmmc = { version = "0.9.0", default-features = false }
+
+
+[patch.crates-io]
+# firefly-types = { path = "../firefly-types" }
+firefly-hal = { path = "../firefly-hal" }
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.

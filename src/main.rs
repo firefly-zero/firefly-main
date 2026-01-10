@@ -12,8 +12,8 @@ use esp_hal::{
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
     lcd_cam::{
-        lcd::i8080::{TxSixteenBits, I8080},
         LcdCam,
+        lcd::i8080::{I8080, TxSixteenBits},
     },
     rng::Rng,
     spi::master::Spi,

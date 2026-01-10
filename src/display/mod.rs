@@ -1,4 +1,3 @@
-mod color;
 mod commands;
 #[allow(clippy::module_inception)]
 mod display;
