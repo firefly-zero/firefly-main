@@ -11,10 +11,7 @@ use esp_hal::{
     delay::Delay,
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
-    lcd_cam::{
-        LcdCam,
-        lcd::i8080::{I8080, TxSixteenBits},
-    },
+    lcd_cam::{LcdCam, lcd::i8080::I8080},
     rng::Rng,
     spi::master::Spi,
     uart::Uart,
@@ -58,43 +55,35 @@ fn run() -> Result<(), Error> {
 
     println!("initializing display...");
     let display = {
-        let tx_pins = TxSixteenBits::new(
-            peripherals.GPIO9,
-            peripherals.GPIO10,
-            peripherals.GPIO11,
-            peripherals.GPIO12,
-            peripherals.GPIO13,
-            peripherals.GPIO14,
-            peripherals.GPIO21,
-            peripherals.GPIO45,
-            peripherals.GPIO38,
-            peripherals.GPIO39,
-            peripherals.GPIO40,
-            peripherals.GPIO41,
-            peripherals.GPIO42,
-            peripherals.GPIO44,
-            peripherals.GPIO43,
-            peripherals.GPIO2,
-        );
-
         // hardware reset
         let rst = peripherals.GPIO46;
         let mut rst = Output::new(rst, Level::Low, OutputConfig::default());
         rst.set_high();
 
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
-        let bus = I8080::new(
-            lcd_cam.lcd,
-            peripherals.DMA_CH0,
-            tx_pins,
-            esp_hal::lcd_cam::lcd::i8080::Config::default(),
-        )
-        .unwrap()
-        .with_cs(peripherals.GPIO1)
-        .with_ctrl_pins(peripherals.GPIO8, peripherals.GPIO3);
-        #[expect(clippy::manual_div_ceil)]
+        let config = esp_hal::lcd_cam::lcd::i8080::Config::default();
+        let bus = I8080::new(lcd_cam.lcd, peripherals.DMA_CH0, config)
+            .unwrap()
+            .with_cs(peripherals.GPIO1)
+            .with_data0(peripherals.GPIO9)
+            .with_data1(peripherals.GPIO10)
+            .with_data2(peripherals.GPIO11)
+            .with_data3(peripherals.GPIO12)
+            .with_data4(peripherals.GPIO13)
+            .with_data5(peripherals.GPIO14)
+            .with_data6(peripherals.GPIO21)
+            .with_data7(peripherals.GPIO45)
+            .with_data8(peripherals.GPIO38)
+            .with_data9(peripherals.GPIO39)
+            .with_data10(peripherals.GPIO40)
+            .with_data11(peripherals.GPIO41)
+            .with_data12(peripherals.GPIO42)
+            .with_data13(peripherals.GPIO44)
+            .with_data14(peripherals.GPIO43)
+            .with_data15(peripherals.GPIO2)
+            .with_dc(peripherals.GPIO8)
+            .with_wrx(peripherals.GPIO3);
         let buf1 = dma_tx_buffer!(480 * 4).unwrap();
-        #[expect(clippy::manual_div_ceil)]
         let buf2 = dma_tx_buffer!(480 * 4).unwrap();
         let writer = Writer::new(bus, buf1, buf2);
         Display::new(writer).unwrap()
@@ -134,7 +123,7 @@ fn run() -> Result<(), Error> {
     Delay::new().delay_millis(1000);
 
     println!("initializing device...");
-    let rng = Rng::new(peripherals.RNG);
+    let rng = Rng::new();
     let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
     let mut config = RuntimeConfig {
         id: None,
