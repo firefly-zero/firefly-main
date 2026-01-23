@@ -23,11 +23,14 @@ embedded-graphics = "0.8.1"
 embedded-hal-bus = "0.3.0"
 embedded-sdmmc = { version = "0.9.0", default-features = false }
 
-
 [patch.crates-io]
 # firefly-types = { path = "../firefly-types" }
 firefly-runtime = { path = "../firefly-runtime" }
 firefly-hal = { path = "../firefly-hal" }
+
+[features]
+default = ["v2"]
+v2 = []
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.
