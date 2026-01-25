@@ -25,10 +25,11 @@ fn main() -> ! {
     let (start, size) = esp_hal::psram::psram_raw_parts(&peripherals.PSRAM);
     init_psram_heap(start, size);
 
-    #[cfg(not(feature = "v2"))]
-    let res = run_v1(peripherals);
-    #[cfg(feature = "v2")]
-    let res = run_v2(peripherals);
+    let res = if cfg!(feature = "v2") {
+        run_v2(peripherals)
+    } else {
+        run_v1(peripherals)
+    };
     match res {
         Ok(()) => println!("unexpected exit"),
         Err(err) => println!("fatal error: {err}"),
