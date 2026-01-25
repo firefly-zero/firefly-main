@@ -1,10 +1,10 @@
 use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_backtrace as _;
+use esp_hal::peripherals::Peripherals;
 use esp_hal::time::Rate;
 use esp_hal::usb_serial_jtag::UsbSerialJtag;
 use esp_hal::{
-    clock::CpuClock,
     delay::Delay,
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
@@ -17,14 +17,7 @@ use esp_println::println;
 use firefly_hal::{Device, DeviceImpl};
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 
-pub fn run_v2() -> Result<(), Error> {
-    println!("creating device config...");
-    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
-    println!("initializing peripherals...");
-    let peripherals = esp_hal::init(config);
-    let (start, size) = esp_hal::psram::psram_raw_parts(&peripherals.PSRAM);
-    init_psram_heap(start, size);
-
+pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     println!("initializing display...");
     let display = {
         // hardware reset
@@ -107,6 +100,7 @@ pub fn run_v2() -> Result<(), Error> {
         display,
         net_handler: NetHandler::None,
     };
+
     config.device.log_debug("firmware", "running...");
     loop {
         let mut runtime = Runtime::new(config)?;
