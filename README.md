@@ -13,10 +13,11 @@ First, you need to know which version of the device you have:
 
 Flashing:
 
-1. Clone the repo.
-1. Install [task](https://taskfile.dev/docs/installation).
-1. Install [espup and xtensa fork of rust](https://docs.espressif.com/projects/rust/book/getting-started/toolchain.html).
-1. Connect the device via USB. Make sure you've connected to the right chip (main, not IO).
+1. [Install espup](https://github.com/esp-rs/espup)
+1. [Install task](https://taskfile.dev/)
+1. `espup install`
+1. `. ~/export-esp.sh`
+1. Connect to the right chip on the device.
 1. `task flash -- --port /dev/ttyACM0 --features v2`
 
 ## License
