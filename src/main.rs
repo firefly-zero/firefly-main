@@ -3,7 +3,7 @@
 extern crate alloc;
 
 use esp_backtrace as _;
-use esp_hal::{delay::Delay, xtensa_lx_rt::entry};
+use esp_hal::{delay::Delay, system::software_reset, xtensa_lx_rt::entry};
 use esp_println::println;
 use firefly_main::*;
 
@@ -14,12 +14,13 @@ fn main() -> ! {
     let res = run_v1();
     #[cfg(feature = "v2")]
     let res = run_v2();
-    if let Err(err) = res {
-        println!("ERROR: {err}");
+    match res {
+        Ok(()) => println!("unexpected exit"),
+        Err(err) => println!("fatal error: {err}"),
     }
-    println!("end");
+
+    // If the code fails, restart the chip.
     let delay = Delay::new();
-    loop {
-        delay.delay(esp_hal::time::Duration::from_millis(500u64));
-    }
+    delay.delay(esp_hal::time::Duration::from_millis(500u64));
+    software_reset();
 }
