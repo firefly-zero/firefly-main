@@ -96,7 +96,12 @@ impl<'a> Display<'a> {
         writer.send_cmd(SWRESET, [])?;
         writer.send_cmd(SLPOUT, [])?;
         writer.send_cmd(COLMOD, [0b101_0101])?;
-        writer.send_cmd(MADCTL, [0b1110_0000])?;
+        let madctl = if cfg!(feature = "v2") {
+            [0b0010_0000] // v2
+        } else {
+            [0b1110_0000] // v1
+        };
+        writer.send_cmd(MADCTL, madctl)?;
         writer.send_cmd(DISON, [])?;
         Ok(Self { writer })
     }
