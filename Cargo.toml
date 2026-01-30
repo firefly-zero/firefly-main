@@ -29,7 +29,8 @@ firefly-runtime = { path = "../firefly-runtime" }
 firefly-hal = { path = "../firefly-hal" }
 
 [features]
-default = ["v2"]
+default = []
+v1 = []
 v2 = []
 
 [profile.release]

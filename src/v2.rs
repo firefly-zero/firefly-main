@@ -1,6 +1,5 @@
 use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
-use esp_backtrace as _;
 use esp_hal::peripherals::Peripherals;
 use esp_hal::time::Rate;
 use esp_hal::usb_serial_jtag::UsbSerialJtag;

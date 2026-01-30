@@ -1,6 +1,5 @@
 use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
-use esp_backtrace as _;
 use esp_hal::peripherals::Peripherals;
 use esp_hal::time::Rate;
 use esp_hal::usb_serial_jtag::UsbSerialJtag;
@@ -25,11 +24,15 @@ pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
         let mut rst = Output::new(rst, Level::Low, OutputConfig::default());
         rst.set_high();
 
+        let pwm = peripherals.GPIO1;
+        let mut pwm = Output::new(pwm, Level::Low, OutputConfig::default());
+        pwm.set_high();
+
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
         let config = esp_hal::lcd_cam::lcd::i8080::Config::default();
         let bus = I8080::new(lcd_cam.lcd, peripherals.DMA_CH0, config)
             .unwrap()
-            .with_cs(peripherals.GPIO1)
+            // .with_cs(peripherals.GPIO1)
             .with_data0(peripherals.GPIO9)
             .with_data1(peripherals.GPIO10)
             .with_data2(peripherals.GPIO11)
