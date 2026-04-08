@@ -5,8 +5,8 @@ rust-version = "1.89.0"
 edition = "2021"
 
 [dependencies]
-firefly-hal = "0.3.3"
-firefly-runtime = "0.10.1"
+firefly-hal = "0.4.0"
+firefly-runtime = "0.11.0"
 esp-backtrace = { version = "0.18.1", features = [
     "esp32s3",
     "panic-handler",
@@ -24,7 +24,6 @@ embedded-hal-bus = "0.3.0"
 embedded-sdmmc = { version = "0.9.0", default-features = false }
 
 [patch.crates-io]
-# firefly-types = { path = "../firefly-types" }
 firefly-runtime = { path = "../firefly-runtime" }
 firefly-hal = { path = "../firefly-hal" }
 
