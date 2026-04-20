@@ -92,7 +92,7 @@ impl<'a> Writer<'a> {
     /// Return the given buffer back into the pool.
     ///
     /// Called when the future owning the buffer is resolved.
-    fn put_buffer(&mut self, buf: DmaTxBuf) -> Result<(), Error> {
+    pub fn put_buffer(&mut self, buf: DmaTxBuf) -> Result<(), Error> {
         for maybe_buf in self.buffers.iter_mut() {
             if maybe_buf.is_none() {
                 *maybe_buf = Some(buf);
@@ -119,7 +119,7 @@ impl<'a> Writer<'a> {
         let Channel::Bus(bus) = core::mem::take(&mut self.channel) else {
             return Err(Error::BusIsBusy);
         };
-        return match bus.send(Command::One(cmd), 0, buf) {
+        match bus.send(Command::One(cmd), 0, buf) {
             Ok(future) => {
                 self.channel = Channel::Future(future);
                 Ok(())
@@ -129,6 +129,6 @@ impl<'a> Writer<'a> {
                 self.put_buffer(buf)?;
                 Err(err.into())
             }
-        };
+        }
     }
 }

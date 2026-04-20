@@ -204,16 +204,7 @@ impl DrawTarget for Display<'_> {
                 cursor += COLOR_BYTES
             }
         }
-        buf.set_length(cursor);
-        // We must send buffer even if it is empty to return it to the pool.
-        if first {
-            self.writer.send_data(RAMWR as u16, buf)?;
-        } else {
-            self.writer.send_data(RAMWRC as u16, buf)?;
-        }
-        // for _ in 1..SCALE_Y {
-        //     self.writer.send_data(RAMWRC as u16, buf)?;
-        // }
+        self.writer.put_buffer(buf)?;
         Ok(())
     }
 
