@@ -8,6 +8,7 @@ use esp_hal::{
     dma_tx_buffer,
     gpio::{Level, Output, OutputConfig},
     lcd_cam::{lcd::i8080::I8080, LcdCam},
+    psram::Psram,
     rng::Rng,
     spi::master::Spi,
     uart::Uart,
@@ -17,6 +18,14 @@ use firefly_hal::{Device, DeviceImpl};
 use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
 
 pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
+    let psram_config = esp_hal::psram::PsramConfig {
+        mode: esp_hal::psram::PsramMode::OctalSpi,
+        ..Default::default()
+    };
+    let psram = Psram::new(peripherals.PSRAM, psram_config);
+    let (start, size) = psram.raw_parts();
+    init_psram_heap(start, size);
+
     println!("initializing display...");
     let display = {
         // hardware reset

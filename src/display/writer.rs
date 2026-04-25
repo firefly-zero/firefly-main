@@ -21,18 +21,14 @@ impl From<DmaError> for Error {
 }
 
 /// Either an i8080 bus, a future owning the bus, or None.
+#[derive(Default)]
 enum Channel<'a> {
     Bus(I8080<'a, Blocking>),
     Future(Future<'a>),
     /// None is set in the brief period between when we got the bus ownership
     /// and when we called `send` on it.
+    #[default]
     None,
-}
-
-impl Default for Channel<'_> {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 pub struct Writer<'a> {
