@@ -76,3 +76,8 @@ pub(super) const COLMOD: u8 = 0x3A;
 /// command. Then D [23:0] is stored in the frame memory and the column register
 /// and the page register incremented.
 pub(super) const RAMWRC: u8 = 0x3C;
+
+/// Write Display Brightness Value.
+///
+/// This command is used to adjust the brightness value of the display.
+pub(super) const WRDISBV: u8 = 0x51;

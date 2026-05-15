@@ -2,8 +2,8 @@ use super::commands::*;
 use super::writer::*;
 use embedded_graphics::{prelude::*, primitives::Rectangle};
 use esp_hal::dma::DmaTxBuf;
+use firefly_runtime::FireflyDisplay;
 use firefly_runtime::FrameBuffer;
-use firefly_runtime::RenderFB;
 use firefly_runtime::Rgb16;
 
 /// Pixels in a row (OX).
@@ -18,7 +18,7 @@ pub struct Display<'a> {
     writer: Writer<'a>,
 }
 
-impl RenderFB for Display<'_> {
+impl FireflyDisplay for Display<'_> {
     type Error = Error;
 
     fn render_fb(&mut self, frame: &mut FrameBuffer) -> Result<(), Self::Error> {
@@ -73,6 +73,20 @@ impl RenderFB for Display<'_> {
             self.writer.send_data(RAMWRC as u16, buf)?;
         }
         Ok(())
+    }
+
+    fn rotate(&mut self, rotate: bool) {
+        let rotate = if cfg!(feature = "v2") {
+            rotate
+        } else {
+            !rotate
+        };
+        let madctl = if rotate { [0b1110_0000] } else { [0b0010_0000] };
+        _ = self.writer.send_cmd(MADCTL, madctl);
+    }
+
+    fn set_brightness(&mut self, brightness: u8) {
+        _ = self.writer.send_cmd(WRDISBV, [brightness]);
     }
 }
 

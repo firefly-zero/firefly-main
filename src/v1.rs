@@ -111,6 +111,7 @@ pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
         display,
         net_handler: NetHandler::None,
     };
+    config.apply_settings();
 
     config.device.log_debug("firmware", "running...");
     loop {
