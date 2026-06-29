@@ -1,19 +1,19 @@
 [package]
 name = "firefly-main"
 version = "0.1.0"
-rust-version = "1.95.0"
+rust-version = "1.91.0"
 edition = "2021"
 
 [dependencies]
-firefly-hal = "0.4.0"
-firefly-runtime = "0.11.0"
+firefly-hal = "0.5.0"
+firefly-runtime = "0.12.0"
 esp-backtrace = { version = "0.19.0", features = [
     "esp32s3",
     "panic-handler",
     "println",
 ] }
 esp-bootloader-esp-idf = { version = "0.5.0", features = ["esp32s3"] }
-esp-hal = { version = "1.1.0", features = ["esp32s3", "unstable"] }
+esp-hal = { version = "1.1.1", features = ["esp32s3", "unstable"] }
 esp-println = { version = "0.17.0", features = [
     "esp32s3",
     "uart",
@@ -27,6 +27,7 @@ embedded-sdmmc = { version = "0.9.0", default-features = false }
 [patch.crates-io]
 firefly-runtime = { path = "../firefly-runtime" }
 firefly-hal = { path = "../firefly-hal" }
+firefly-audio = { path = "../firefly-audio" }
 
 [features]
 default = []
