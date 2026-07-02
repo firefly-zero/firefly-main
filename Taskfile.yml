@@ -11,14 +11,29 @@ tasks:
   build:
     cmds:
       - cargo build --release
-  flash:
+  write-serial:
+    desc: Write the serial number to the device's flash.
     cmds:
       - task: install-espflash
+      - python3 -c 'open("/tmp/serial.txt", "wb").write((1337).to_bytes(4))'
+      - defer: rm /tmp/serial.txt
+      - >
+        cargo espflash write-bin
+        --skip-update-check
+        --chip esp32s3
+        0x10000
+        /tmp/serial.txt
+  flash:
+    desc: Build the firmware and write it to the device connected via USB.
+    cmds:
+      - task: install-espflash
+      - task: write-serial
       - >
         cargo espflash flash
         --skip-update-check
-        --chip esp32s3
-        --partition-table partitions.csv
+        --chip                  esp32s3
+        --partition-table       partitions.csv
+        --target-app-partition  factory
         --release
         {{.CLI_ARGS}}
   monitor:
