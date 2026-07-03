@@ -110,7 +110,7 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
     let mut ota = OtaUpdater::new(&mut flash, &mut pt_buf).unwrap();
     let part = ota.ota_data().unwrap().current_app_partition().unwrap();
-    let part = match part {
+    let main_partition = match part {
         AppPartitionSubType::Factory => 0,
         AppPartitionSubType::Ota0 => 1,
         AppPartitionSubType::Ota1 => 2,
@@ -119,7 +119,8 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
 
     println!("initializing device...");
     let rng = Rng::new();
-    let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
+    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
+    let (io_version, io_partition) = device.get_io_chip_info().unwrap_or_default();
     let mut config = RuntimeConfig {
         id: None,
         device,
@@ -133,9 +134,9 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
         model: 2,
         serial: serial_number,
         main_version: get_firmware_version(),
-        io_version: (0, 0, 0),
-        main_partition: part,
-        io_partition: 0,
+        io_version,
+        main_partition,
+        io_partition,
     });
 
     println!("running...");
