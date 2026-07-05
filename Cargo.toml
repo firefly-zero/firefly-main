@@ -7,7 +7,6 @@ edition = "2021"
 [dependencies]
 firefly-hal = "0.5.0"
 firefly-runtime = "0.12.0"
-firefly-types = "0.11.0"
 esp-backtrace = { version = "0.19.0", features = [
     "esp32s3",
     "panic-handler",

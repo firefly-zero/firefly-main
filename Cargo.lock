@@ -1064,7 +1064,6 @@ dependencies = [
  "esp-storage",
  "firefly-hal",
  "firefly-runtime",
- "firefly-types",
 ]
 
 [[package]]

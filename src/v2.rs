@@ -19,8 +19,7 @@ use esp_hal::{
 use esp_println::println;
 use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
-use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
-use firefly_types::DeviceInfo;
+use firefly_runtime::{DeviceInfo, NetHandler, Runtime, RuntimeConfig};
 
 pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     let psram_config = esp_hal::psram::PsramConfig {
@@ -155,11 +154,9 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
 }
 
 fn get_firmware_version() -> (u8, u8, u8) {
-    let raw = env!("CARGO_PKG_VERSION");
-    let mut iter = raw.split('.');
-    let major: u8 = iter.next().unwrap().parse().unwrap();
-    let minor: u8 = iter.next().unwrap().parse().unwrap();
-    let patch: u8 = iter.next().unwrap().parse().unwrap();
+    let major: u8 = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+    let minor: u8 = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
+    let patch: u8 = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
     (major, minor, patch)
 }
 
