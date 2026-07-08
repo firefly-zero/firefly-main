@@ -1,5 +1,8 @@
 use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
+use embedded_storage::ReadStorage;
+use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
+use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
 use esp_hal::peripherals::Peripherals;
 use esp_hal::time::Rate;
 use esp_hal::usb_serial_jtag::UsbSerialJtag;
@@ -14,8 +17,9 @@ use esp_hal::{
     uart::Uart,
 };
 use esp_println::println;
-use firefly_hal::{Device, DeviceImpl};
-use firefly_runtime::{NetHandler, Runtime, RuntimeConfig};
+use esp_storage::FlashStorage;
+use firefly_hal::DeviceImpl;
+use firefly_runtime::{DeviceInfo, NetHandler, Runtime, RuntimeConfig};
 
 pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
     let psram_config = esp_hal::psram::PsramConfig {
@@ -102,9 +106,15 @@ pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
 
+    println!("reading OTA state...");
+    let mut flash = FlashStorage::new(peripherals.FLASH);
+    let serial_number = read_serial(&mut flash);
+    let main_partition = get_partition(&mut flash);
+
     println!("initializing device...");
     let rng = Rng::new();
-    let device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng)?;
+    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng, flash)?;
+    let (io_version, io_partition) = device.get_io_chip_info().unwrap_or_default();
     let mut config = RuntimeConfig {
         id: None,
         device,
@@ -113,7 +123,17 @@ pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
     };
     config.apply_settings();
 
-    config.device.log_debug("firmware", "running...");
+    println!("reading device info...");
+    config.save_device_info(DeviceInfo {
+        model: 2,
+        serial: serial_number,
+        main_version: get_firmware_version(),
+        io_version,
+        main_partition,
+        io_partition,
+    });
+
+    println!("running...");
     loop {
         let mut runtime = Runtime::new(config)?;
         runtime.start()?;
@@ -126,4 +146,29 @@ pub fn run_v1(peripherals: Peripherals) -> Result<(), Error> {
             }
         }
     }
+}
+
+fn get_partition(flash: &mut FlashStorage<'_>) -> u8 {
+    let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
+    let mut ota = OtaUpdater::new(flash, &mut pt_buf).unwrap();
+    let part = ota.ota_data().unwrap().current_app_partition().unwrap();
+    match part {
+        AppPartitionSubType::Factory => 0,
+        AppPartitionSubType::Ota0 => 1,
+        AppPartitionSubType::Ota1 => 2,
+        _ => unreachable!(),
+    }
+}
+
+fn get_firmware_version() -> (u8, u8, u8) {
+    let major: u8 = env!("CARGO_PKG_VERSION_MAJOR").parse().unwrap();
+    let minor: u8 = env!("CARGO_PKG_VERSION_MINOR").parse().unwrap();
+    let patch: u8 = env!("CARGO_PKG_VERSION_PATCH").parse().unwrap();
+    (major, minor, patch)
+}
+
+fn read_serial(flash: &mut FlashStorage) -> u32 {
+    let mut buf = [0, 0, 0, 0];
+    _ = flash.read(0x10000, &mut buf);
+    u32::from_le_bytes(buf)
 }

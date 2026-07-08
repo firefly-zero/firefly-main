@@ -149,13 +149,12 @@ fn get_partition(flash: &mut FlashStorage<'_>) -> u8 {
     let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
     let mut ota = OtaUpdater::new(flash, &mut pt_buf).unwrap();
     let part = ota.ota_data().unwrap().current_app_partition().unwrap();
-    let main_partition = match part {
+    match part {
         AppPartitionSubType::Factory => 0,
         AppPartitionSubType::Ota0 => 1,
         AppPartitionSubType::Ota1 => 2,
         _ => unreachable!(),
-    };
-    main_partition
+    }
 }
 
 fn get_firmware_version() -> (u8, u8, u8) {
