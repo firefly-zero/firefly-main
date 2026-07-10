@@ -8,9 +8,19 @@ tasks:
       - which cargo-espflash
     cmds:
       - cargo install cargo-espflash
+
   build:
+    desc: Build firmware and save it in the firefly-updates directory.
     cmds:
-      - cargo build --release
+      - >
+        cargo espflash save-image
+        --skip-update-check
+        --features v2
+        --chip esp32s3
+        --release
+        {{.CLI_ARGS}}
+        ../firefly-updates/firefly-main
+
   write-serial:
     desc: Write the serial number to the device's flash.
     cmds:
@@ -23,11 +33,17 @@ tasks:
         --chip esp32s3
         0x10000
         /tmp/serial.txt
+
   flash:
     desc: Build the firmware and write it to the device connected via USB.
     cmds:
       - task: install-espflash
       - task: write-serial
+      # Switch OTA to the factory slot
+      - >
+        cargo espflash erase-parts
+        --partition-table partitions.csv
+        otadata
       - >
         cargo espflash flash
         --skip-update-check
@@ -36,6 +52,7 @@ tasks:
         --target-app-partition  factory
         --release
         {{.CLI_ARGS}}
+
   monitor:
     cmds:
       - task: install-espflash
