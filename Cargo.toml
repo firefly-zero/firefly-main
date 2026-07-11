@@ -30,6 +30,7 @@ embedded-sdmmc = { version = "0.9.0", default-features = false }
 firefly-runtime = { path = "../firefly-runtime" }
 firefly-hal = { path = "../firefly-hal" }
 firefly-audio = { path = "../firefly-audio" }
+# firefly-types = { path = "../firefly-types" }
 
 [features]
 default = []
