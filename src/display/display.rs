@@ -10,6 +10,7 @@ use firefly_runtime::Rgb16;
 const REAL_WIDTH: u16 = 480;
 /// Pixels in a column (OY).
 const REAL_HEIGHT: u16 = 320;
+/// Bytes per pixel. We use RGB565 which is 16 bits (2 bytes).
 const COLOR_BYTES: usize = 2;
 const SCALE_Y: u8 = 2;
 const SCALE_X: u8 = 2;
@@ -171,7 +172,7 @@ impl DrawTarget for Display<'_> {
     where
         I: IntoIterator<Item = Pixel<Self::Color>>,
     {
-        todo!()
+        core::unimplemented!()
     }
 
     fn fill_contiguous<I>(&mut self, area: &Rectangle, colors: I) -> Result<(), Self::Error>

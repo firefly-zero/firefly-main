@@ -19,7 +19,7 @@ tasks:
         --chip esp32s3
         --release
         {{.CLI_ARGS}}
-        ../firefly-updates/firefly-main
+        ../../apps/firefly-updates/firefly-main
 
   write-serial:
     desc: Write the serial number to the device's flash.
