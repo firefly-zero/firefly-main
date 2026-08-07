@@ -2,6 +2,10 @@
 version: "3"
 dotenv:
   - ~/export-esp.sh
+
+vars:
+  IMAGE: ../../apps/firefly-updates/firefly-main
+
 tasks:
   install-espflash:
     status:
@@ -18,8 +22,21 @@ tasks:
         --features v2
         --chip esp32s3
         --release
-        {{.CLI_ARGS}}
-        ../../apps/firefly-updates/firefly-main
+        {{.IMAGE}}
+
+  release:
+    desc: build and publish release
+    cmds:
+      - task: build
+      - test {{.CLI_ARGS}}
+      - grep -F '"{{.CLI_ARGS}}"' Cargo.toml
+      - git tag {{.CLI_ARGS}}
+      - git push
+      - git push --tags
+      - gh release create --generate-notes {{.CLI_ARGS}}
+      - gzip -kfc {{.IMAGE}} > firefly-main.gz
+      - defer: rm firefly-main.gz
+      - gh release upload {{.CLI_ARGS}} firefly-main.gz
 
   write-serial:
     desc: Write the serial number to the device's flash.
