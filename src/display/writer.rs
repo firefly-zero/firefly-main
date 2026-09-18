@@ -46,25 +46,25 @@ impl<'a> Writer<'a> {
     }
 
     pub fn take_buffer(&mut self) -> Result<DmaTxBuf, Error> {
-        if let Some(buf) = self.try_take_buffer()? {
+        if let Some(buf) = self.try_take_buffer() {
             return Ok(buf);
         }
         self.wait()?;
-        if let Some(buf) = self.try_take_buffer()? {
+        if let Some(buf) = self.try_take_buffer() {
             return Ok(buf);
         }
         Err(Error::OutOfBuffers)
     }
 
     /// Get ownership of the first available buffer
-    fn try_take_buffer(&mut self) -> Result<Option<DmaTxBuf>, Error> {
+    fn try_take_buffer(&mut self) -> Option<DmaTxBuf> {
         // Try to find an available buffer.
         for maybe_buf in self.buffers.iter_mut() {
             if let Some(buf) = maybe_buf.take() {
-                return Ok(Some(buf));
+                return Some(buf);
             }
         }
-        Ok(None)
+        None
     }
 
     /// Find a pending future and await it.

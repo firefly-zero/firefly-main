@@ -19,7 +19,7 @@ use esp_hal::{
 use esp_println::println;
 use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
-use firefly_runtime::{DeviceInfo, NetHandler, Runtime, RuntimeConfig};
+use firefly_runtime::{DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
 
 pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     let psram_config = esp_hal::psram::PsramConfig {
@@ -113,7 +113,7 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng, flash)?;
     let (io_version, io_partition) = device.get_io_chip_info().unwrap_or_default();
     let mut config = RuntimeConfig {
-        id: None,
+        next: NextApp::Launcher,
         device,
         display,
         net_handler: NetHandler::None,
@@ -139,6 +139,10 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
             // Exit requested. Finalize runtime and get ownership of the device back.
             if exit {
                 config = runtime.finalize()?;
+                if config.next == NextApp::PowerOff {
+                    config.finalize();
+                    return Ok(());
+                }
                 break;
             }
         }
