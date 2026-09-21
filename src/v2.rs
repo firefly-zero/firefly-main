@@ -12,7 +12,6 @@ use esp_hal::{
     gpio::{Level, Output, OutputConfig},
     lcd_cam::{lcd::i8080::I8080, LcdCam},
     psram::Psram,
-    rng::Rng,
     spi::master::Spi,
     uart::Uart,
 };
@@ -109,8 +108,7 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
     let main_partition = get_partition(&mut flash);
 
     println!("initializing device...");
-    let rng = Rng::new();
-    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, rng, flash)?;
+    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, flash)?;
     let (io_version, io_partition) = device.get_io_chip_info().unwrap_or_default();
     let mut config = RuntimeConfig {
         next: NextApp::Launcher,
