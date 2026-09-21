@@ -1,11 +1,10 @@
 use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
-use embedded_storage::ReadStorage;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
 use esp_hal::peripherals::Peripherals;
 use esp_hal::time::Rate;
-use esp_hal::usb_serial_jtag::UsbSerialJtag;
+use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
 use esp_hal::{
     delay::Delay,
     dma_tx_buffer,
