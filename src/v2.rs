@@ -3,7 +3,9 @@ use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
 use esp_hal::peripherals::Peripherals;
+use esp_hal::rtc_cntl::sleep::{LowPower, RtcSleepConfig};
 use esp_hal::time::Rate;
+use esp_hal::uart::WakeupConfig;
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
 use esp_hal::{
     delay::Delay,
@@ -87,13 +89,14 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
         ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
     };
 
-    let io_uart = {
+    let mut io_uart = {
         let uart_config = esp_hal::uart::Config::default().with_baudrate(921_600);
         Uart::new(peripherals.UART1, uart_config)
             .unwrap()
             .with_rx(peripherals.GPIO38)
             .with_tx(peripherals.GPIO39)
     };
+    io_uart.enable_wakeup(&WakeupConfig::default()).unwrap();
 
     let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
     _ = usb_serial.write_byte_nb(0x00);
@@ -138,7 +141,7 @@ pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
                 config = runtime.finalize()?;
                 if config.next == NextApp::PowerOff {
                     config.finalize();
-                    return Ok(());
+                    LowPower::new(peripherals.LPWR).sleep_deep(RtcSleepConfig::deep());
                 }
                 break;
             }
