@@ -19,7 +19,7 @@ tasks:
       - >
         cargo espflash save-image
         --skip-update-check
-        --features v2
+        --features v3
         --chip esp32s3
         --release
         {{.IMAGE}}

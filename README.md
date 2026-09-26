@@ -10,6 +10,7 @@ First, you need to know which version of the device you have:
 
 * `v1`: The very first prototype (FOSDEM 2025). It's in a simple rectangle case and powered by two ESP32-S3.
 * `v2`: The next iteration of the prototype. The hardware components are the same but the pinout is different. This is the first prototype in a case with rounded corners.
+* `v3`: The first revision with hardware for sound, created for Hackfest 2026.
 
 Flashing:
 
@@ -18,7 +19,7 @@ Flashing:
 1. `espup install`
 1. `. ~/export-esp.sh`
 1. Connect to the right chip on the device.
-1. `task flash -- --port /dev/ttyACM0 --features v2`
+1. `task flash -- --port /dev/ttyACM0 --features v3`
 
 ## License
 

@@ -77,7 +77,7 @@ impl FireflyDisplay for Display<'_> {
     }
 
     fn rotate(&mut self, rotate: bool) {
-        let rotate = if cfg!(feature = "v2") {
+        let rotate = if cfg!(any(feature = "v2", feature = "v3")) {
             rotate
         } else {
             !rotate
