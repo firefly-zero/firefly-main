@@ -18,7 +18,9 @@ fn main() -> ! {
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);
 
-    let res = if cfg!(feature = "v2") {
+    let res = if cfg!(feature = "v3") {
+        run_v3(peripherals)
+    } else if cfg!(feature = "v2") {
         run_v2(peripherals)
     } else {
         run_v1(peripherals)

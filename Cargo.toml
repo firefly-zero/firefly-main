@@ -35,6 +35,7 @@ firefly-audio = { path = "../firefly-audio" }
 default = []
 v1 = []
 v2 = []
+v3 = []
 
 [profile.release]
 strip = true             # Automatically strip symbols from the binary.
