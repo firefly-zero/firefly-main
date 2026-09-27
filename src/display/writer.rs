@@ -1,8 +1,6 @@
-use esp_hal::{
-    dma::{DmaError, DmaTxBuf},
-    lcd_cam::lcd::i8080::{Command, I8080Transfer, I8080},
-    Blocking,
-};
+use esp_hal::dma::{DmaError, DmaTxBuf};
+use esp_hal::lcd_cam::lcd::i8080::{Command, I8080Transfer, I8080};
+use esp_hal::Blocking;
 
 type Future<'a> = I8080Transfer<'a, DmaTxBuf, Blocking>;
 

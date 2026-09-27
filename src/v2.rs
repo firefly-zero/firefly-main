@@ -2,20 +2,18 @@ use crate::*;
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
+use esp_hal::delay::Delay;
+use esp_hal::dma_tx_buffer;
+use esp_hal::gpio::{Level, Output, OutputConfig};
+use esp_hal::lcd_cam::lcd::i8080::I8080;
+use esp_hal::lcd_cam::LcdCam;
 use esp_hal::peripherals::Peripherals;
+use esp_hal::psram::Psram;
 use esp_hal::rtc_cntl::sleep::{LowPower, RtcSleepConfig};
+use esp_hal::spi::master::Spi;
 use esp_hal::time::Rate;
-use esp_hal::uart::WakeupConfig;
+use esp_hal::uart::{Uart, WakeupConfig};
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
-use esp_hal::{
-    delay::Delay,
-    dma_tx_buffer,
-    gpio::{Level, Output, OutputConfig},
-    lcd_cam::{lcd::i8080::I8080, LcdCam},
-    psram::Psram,
-    spi::master::Spi,
-    uart::Uart,
-};
 use esp_println::println;
 use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;

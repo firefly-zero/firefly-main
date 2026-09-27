@@ -1,0 +1,5 @@
+newline_style = "Unix"
+use_field_init_shorthand = true
+force_explicit_abi = true
+imports_granularity = "Module"
+group_imports = "One"

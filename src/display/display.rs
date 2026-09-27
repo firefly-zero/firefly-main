@@ -1,10 +1,9 @@
 use super::commands::*;
 use super::writer::*;
-use embedded_graphics::{prelude::*, primitives::Rectangle};
+use embedded_graphics::prelude::*;
+use embedded_graphics::primitives::Rectangle;
 use esp_hal::dma::DmaTxBuf;
-use firefly_runtime::FireflyDisplay;
-use firefly_runtime::FrameBuffer;
-use firefly_runtime::Rgb16;
+use firefly_runtime::{FireflyDisplay, FrameBuffer, Rgb16};
 
 /// Pixels in a row (OX).
 const REAL_WIDTH: u16 = 480;

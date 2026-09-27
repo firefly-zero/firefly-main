@@ -3,7 +3,10 @@
 extern crate alloc;
 
 use esp_backtrace as _;
-use esp_hal::{clock::CpuClock, delay::Delay, system::software_reset, xtensa_lx_rt::entry};
+use esp_hal::clock::CpuClock;
+use esp_hal::delay::Delay;
+use esp_hal::system::software_reset;
+use esp_hal::xtensa_lx_rt::entry;
 use esp_println::println;
 use firefly_main::*;
 
