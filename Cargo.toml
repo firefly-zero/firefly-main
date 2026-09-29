@@ -1,13 +1,13 @@
 [package]
 name = "firefly-main"
-version = "0.13.0"
+version = "0.14.0"
 rust-version = "1.98.1"
 edition = "2021"
 
 [dependencies]
 anyhow = { version = "1.0.104", default-features = false }
 firefly-hal = "0.5.2"
-firefly-runtime = "0.13.0"
+firefly-runtime = "0.14.0"
 esp-backtrace = { version = "0.20.0", features = [
     "esp32s3",
     "panic-handler",
@@ -26,10 +26,10 @@ embedded-graphics = "0.8.2"
 embedded-hal-bus = "0.3.0"
 embedded-sdmmc = { version = "0.10.0", default-features = false }
 
-[patch.crates-io]
-firefly-runtime = { path = "../firefly-runtime" }
-firefly-hal = { path = "../firefly-hal" }
-firefly-audio = { path = "../firefly-audio" }
+# [patch.crates-io]
+# firefly-runtime = { path = "../firefly-runtime" }
+# firefly-hal = { path = "../firefly-hal" }
+# firefly-audio = { path = "../firefly-audio" }
 # firefly-types = { path = "../firefly-types" }
 
 [features]
