@@ -41,7 +41,7 @@ fn run(peripherals: Peripherals) -> Result<()> {
     } else if cfg!(feature = "v2") {
         run_v2(peripherals)?;
     } else {
-        run_v1(peripherals)?;
+        panic!("unsupported hardware version");
     }
     Ok(())
 }

@@ -34,7 +34,6 @@ firefly-audio = { path = "../firefly-audio" }
 
 [features]
 default = []
-v1 = []
 v2 = []
 v3 = []
 

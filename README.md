@@ -8,9 +8,9 @@ It initializes all drivers and [ESP32](https://en.wikipedia.org/wiki/ESP32) peri
 
 First, you need to know which version of the device you have:
 
-* `v1`: The very first prototype (FOSDEM 2025). It's in a simple rectangle case and powered by two ESP32-S3.
-* `v2`: The next iteration of the prototype. The hardware components are the same but the pinout is different. This is the first prototype in a case with rounded corners.
-* `v3`: The first revision with hardware for sound, created for Hackfest 2026.
+* `v1`: FOSDEM 2025 (not supported anymore).
+* `v2`: FOSDEM 2026.
+* `v3`: Hackfest 2026.
 
 Flashing:
 
