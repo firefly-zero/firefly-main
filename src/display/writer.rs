@@ -12,6 +12,19 @@ pub enum Error {
     BusIsBusy,
 }
 
+impl core::fmt::Display for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Error::Dma(e) => write!(f, "DMA error: {e:?}"),
+            Error::OutOfBuffers => write!(f, "out of buffers"),
+            Error::TooManyBuffers => write!(f, "too many buffers"),
+            Error::BusIsBusy => write!(f, "bus is busy"),
+        }
+    }
+}
+
+impl core::error::Error for Error {}
+
 impl From<DmaError> for Error {
     fn from(v: DmaError) -> Self {
         Self::Dma(v)

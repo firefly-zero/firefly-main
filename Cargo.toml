@@ -5,6 +5,7 @@ rust-version = "1.98.1"
 edition = "2021"
 
 [dependencies]
+anyhow = { version = "1.0.104", default-features = false }
 firefly-hal = "0.5.2"
 firefly-runtime = "0.13.0"
 esp-backtrace = { version = "0.20.0", features = [

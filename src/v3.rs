@@ -1,4 +1,5 @@
 use crate::*;
+use anyhow::{bail, Context, Result};
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
@@ -19,7 +20,7 @@ use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
 use firefly_runtime::{DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
 
-pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
+pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     let psram_config = esp_hal::psram::PsramConfig {
         mode: esp_hal::psram::PsramMode::OctalSpi,
         ..Default::default()
@@ -35,8 +36,10 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
     let display = {
         let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
         let config = esp_hal::lcd_cam::lcd::i8080::Config::default();
-        let bus = I8080::new(lcd_cam.lcd, peripherals.DMA_CH0, config)
-            .unwrap()
+        let Ok(bus) = I8080::new(lcd_cam.lcd, peripherals.DMA_CH0, config) else {
+            bail!("failed to create I8080 bus")
+        };
+        let bus = bus
             .with_data0(peripherals.GPIO12)
             .with_data1(peripherals.GPIO13)
             .with_data2(peripherals.GPIO14)
@@ -56,10 +59,10 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
             .with_dc(peripherals.GPIO5)
             .with_wrx(peripherals.GPIO4);
         // 2 bytes per pixel, 240 pixels per line, 4 lines.
-        let buf1 = dma_tx_buffer!(480 * 4).unwrap();
-        let buf2 = dma_tx_buffer!(480 * 4).unwrap();
+        let buf1 = dma_tx_buffer!(480 * 4)?;
+        let buf2 = dma_tx_buffer!(480 * 4)?;
         let writer = Writer::new(bus, buf1, buf2);
-        Display::new(writer).unwrap()
+        Display::new(writer)?
     };
 
     println!("initializing SPIs...");
@@ -70,22 +73,19 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
         let cs = Output::new(peripherals.GPIO11, Level::High, OutputConfig::default());
 
         let spi_config = esp_hal::spi::master::Config::default().with_frequency(Rate::from_mhz(4));
-        let spi = Spi::new(peripherals.SPI2, spi_config)
-            .unwrap()
-            .with_sck(sclk)
-            .with_miso(miso)
-            .with_mosi(mosi);
-        ExclusiveDevice::new(spi, cs, Delay::new()).unwrap()
+        let spi = Spi::new(peripherals.SPI2, spi_config).context("create SPI driver")?;
+        let spi = spi.with_sck(sclk).with_miso(miso).with_mosi(mosi);
+        ExclusiveDevice::new(spi, cs, Delay::new()).context("create SPI device")?
     };
 
     let mut io_uart = {
         let uart_config = esp_hal::uart::Config::default().with_baudrate(921_600);
-        Uart::new(peripherals.UART1, uart_config)
-            .unwrap()
-            .with_rx(peripherals.GPIO15)
-            .with_tx(peripherals.GPIO7)
+        let uart = Uart::new(peripherals.UART1, uart_config).context("create UART")?;
+        uart.with_rx(peripherals.GPIO15).with_tx(peripherals.GPIO7)
     };
-    io_uart.enable_wakeup(&WakeupConfig::default()).unwrap();
+    io_uart
+        .enable_wakeup(&WakeupConfig::default())
+        .context("enable wakeup on IO")?;
 
     let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
     _ = usb_serial.write_byte_nb(0x00);
@@ -93,10 +93,10 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
     println!("reading OTA state...");
     let mut flash = FlashStorage::new(peripherals.FLASH);
     let serial_number = read_serial(&mut flash);
-    let main_partition = get_partition(&mut flash);
+    let main_partition = get_partition(&mut flash)?;
 
     println!("initializing device...");
-    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, flash)?;
+    let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, flash).context("init device")?;
     let (io_version, io_partition) = device.get_io_chip_info().unwrap_or_default();
     let mut config = RuntimeConfig {
         next: NextApp::Launcher,
@@ -118,13 +118,13 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
 
     println!("running...");
     loop {
-        let mut runtime = Runtime::new(config)?;
-        runtime.start()?;
+        let mut runtime = wrap(Runtime::new(config)).context("init runtime")?;
+        wrap(runtime.start()).context("start runtime")?;
         loop {
-            let exit = runtime.update()?;
+            let exit = wrap(runtime.update()).context("run update cycle")?;
             // Exit requested. Finalize runtime and get ownership of the device back.
             if exit {
-                config = runtime.finalize()?;
+                config = wrap(runtime.finalize()).context("finalize runtime")?;
                 if config.next == NextApp::PowerOff {
                     config.finalize();
                     LowPower::new(peripherals.LPWR).sleep_deep(RtcSleepConfig::deep());
@@ -135,16 +135,17 @@ pub fn run_v3(peripherals: Peripherals) -> Result<(), Error> {
     }
 }
 
-fn get_partition(flash: &mut FlashStorage<'_>) -> u8 {
+fn get_partition(flash: &mut FlashStorage<'_>) -> Result<u8> {
     let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
-    let mut ota = OtaUpdater::new(flash, &mut pt_buf).unwrap();
-    let part = ota.ota_data().unwrap().current_app_partition().unwrap();
-    match part {
+    let mut ota = OtaUpdater::new(flash, &mut pt_buf)?;
+    let part = ota.ota_data()?.current_app_partition()?;
+    let part = match part {
         AppPartitionSubType::Factory => 0,
         AppPartitionSubType::Ota0 => 1,
         AppPartitionSubType::Ota1 => 2,
         _ => unreachable!(),
-    }
+    };
+    Ok(part)
 }
 
 fn get_firmware_version() -> (u8, u8, u8) {
@@ -158,4 +159,11 @@ fn read_serial(flash: &mut FlashStorage) -> u32 {
     let mut buf = [0, 0, 0, 0];
     _ = flash.read(0x10000, &mut buf);
     u32::from_le_bytes(buf)
+}
+
+fn wrap<T, E: core::fmt::Display>(r: Result<T, E>) -> Result<T> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(e) => bail!("{e}"),
+    }
 }

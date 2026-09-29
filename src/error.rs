@@ -6,6 +6,14 @@ pub enum Error {
     Pin,
 }
 
+impl core::fmt::Debug for Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        core::fmt::Display::fmt(self, f)
+    }
+}
+
+impl core::error::Error for Error {}
+
 impl From<firefly_hal::NetworkError> for Error {
     fn from(v: firefly_hal::NetworkError) -> Self {
         Self::Network(v)
