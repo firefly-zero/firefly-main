@@ -24,7 +24,7 @@ esp-alloc = "0.11.0"
 critical-section = "1.2.0"
 embedded-graphics = "0.8.2"
 embedded-hal-bus = "0.3.0"
-embedded-sdmmc = { version = "0.9.0", default-features = false }
+embedded-sdmmc = { version = "0.10.0", default-features = false }
 
 [patch.crates-io]
 firefly-runtime = { path = "../firefly-runtime" }
