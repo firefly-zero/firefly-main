@@ -1160,8 +1160,6 @@ dependencies = [
 [[package]]
 name = "firefly-audio"
 version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5113f8c983a2d00bcd261dabee05140b30b02d2bd929566e77fe029b3822a0ec"
 dependencies = [
  "embedded-io 0.6.1",
  "micromath",
@@ -1171,10 +1169,9 @@ dependencies = [
 [[package]]
 name = "firefly-hal"
 version = "0.5.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7dab196a79d49c279ada0c3b710516b610d01902a16a2507905f5b4dd22bcf1d"
 dependencies = [
  "cobs 0.5.1",
+ "critical-section",
  "embedded-hal 1.0.0",
  "embedded-hal-bus",
  "embedded-io 0.6.1",
@@ -1184,6 +1181,7 @@ dependencies = [
  "esp-hal",
  "esp-rom-sys",
  "esp-storage",
+ "esp-sync",
  "firefly-types",
  "gilrs",
  "hound",
@@ -1220,9 +1218,8 @@ dependencies = [
 [[package]]
 name = "firefly-runtime"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f97a9daa8b2a8b10042dc39de96305ad18387e17fb58b4b8bf5660c05ff4c178"
 dependencies = [
+ "critical-section",
  "embedded-graphics",
  "embedded-io 0.6.1",
  "firefly-audio",
@@ -1239,8 +1236,6 @@ dependencies = [
 [[package]]
 name = "firefly-types"
 version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216a00c715276eec2a0a2cc82b04952292baaf117b2ce555de96560309e96e9c"
 dependencies = [
  "postcard",
  "serde",

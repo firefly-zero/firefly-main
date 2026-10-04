@@ -26,11 +26,11 @@ embedded-graphics = "0.8.2"
 embedded-hal-bus = "0.3.0"
 embedded-sdmmc = { version = "0.10.0", default-features = false }
 
-# [patch.crates-io]
-# firefly-runtime = { path = "../firefly-runtime" }
-# firefly-hal = { path = "../firefly-hal" }
-# firefly-audio = { path = "../firefly-audio" }
-# firefly-types = { path = "../firefly-types" }
+[patch.crates-io]
+firefly-runtime = { path = "../firefly-runtime" }
+firefly-hal = { path = "../firefly-hal" }
+firefly-audio = { path = "../firefly-audio" }
+firefly-types = { path = "../firefly-types" }
 
 [features]
 default = []

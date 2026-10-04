@@ -3,8 +3,8 @@ use anyhow::{bail, Context, Result};
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
+use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
-use esp_hal::dma_tx_buffer;
 use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::lcd_cam::lcd::i8080::I8080;
 use esp_hal::lcd_cam::LcdCam;
@@ -12,13 +12,17 @@ use esp_hal::peripherals::Peripherals;
 use esp_hal::psram::Psram;
 use esp_hal::rtc_cntl::sleep::{LowPower, RtcSleepConfig};
 use esp_hal::spi::master::Spi;
+use esp_hal::system::{CpuControl, Stack};
 use esp_hal::time::Rate;
 use esp_hal::uart::{Uart, WakeupConfig};
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
+use esp_hal::{dma_tx_buffer, dma_tx_stream_buffer};
 use esp_println::println;
 use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
-use firefly_runtime::{DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
+use firefly_runtime::{audio, DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
+
+static mut AUDIO_STACK: Stack<1024> = Stack::new();
 
 pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     let psram_config = esp_hal::psram::PsramConfig {
@@ -116,6 +120,16 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         io_partition,
     });
 
+    {
+        let mut cpus = CpuControl::new(peripherals.CPU_CTRL);
+        #[expect(static_mut_refs)]
+        let stack = unsafe { &mut AUDIO_STACK };
+        let res = cpus.start_app_core(stack, audio_thread);
+        if res.is_err() {
+            bail!("cannot start audio processor, app core is already running");
+        }
+    }
+
     println!("running...");
     loop {
         let mut runtime = wrap(Runtime::new(config)).context("init runtime")?;
@@ -166,4 +180,50 @@ fn wrap<T, E: core::fmt::Display>(r: Result<T, E>) -> Result<T> {
         Ok(v) => Ok(v),
         Err(e) => bail!("{e}"),
     }
+}
+
+fn audio_thread() {
+    use esp_hal::i2s::master::*;
+
+    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
+    let peripherals = esp_hal::init(config);
+
+    let ws = peripherals.GPIO17; //   LRCK/WS:     Word Select / Left-Right Clock
+    let bclk = peripherals.GPIO8; //  BCLK/SCK:    Bit Clock
+    let dout = peripherals.GPIO18; // DATA:        Serial Data
+    let mclk = peripherals.GPIO3; //  MCLK/SYSCLK: Master Clock
+
+    let config = TdmConfig::new_tdm_philips()
+        .with_sample_rate(Rate::from_hz(44100))
+        .with_data_format(DataFormat::Data16Channel16)
+        .with_channels(Channels::STEREO);
+    let i2s = I2s::new(peripherals.I2S0, peripherals.DMA_CH1, config)
+        .unwrap()
+        .with_mclk(mclk);
+
+    let mut buffer = dma_tx_stream_buffer!(4092 * 4, 2048);
+    let mut tx = i2s
+        .i2s_tx
+        .with_bclk(bclk)
+        .with_ws(ws)
+        .with_dout(dout)
+        .build();
+
+    loop {
+        buffer.push_with(fill_audio);
+        let transaction = tx.write(buffer).unwrap();
+        let res;
+        (res, tx, buffer) = transaction.wait();
+        res.unwrap();
+    }
+}
+
+fn fill_audio(buf: &mut [u8]) -> usize {
+    let len = buf.len();
+    let ptr = buf.as_ptr() as *mut i16;
+    let buf: &mut [i16] = unsafe { core::slice::from_raw_parts_mut(ptr, len / 2) };
+    audio::exec_external(|manager| {
+        manager.write(buf);
+    });
+    buf.len()
 }
