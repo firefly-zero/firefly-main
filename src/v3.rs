@@ -3,8 +3,8 @@ use anyhow::{bail, Context, Result};
 use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
-use esp_hal::clock::CpuClock;
 use esp_hal::delay::Delay;
+use esp_hal::dma::DmaTxStreamBuf;
 use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::lcd_cam::lcd::i8080::I8080;
 use esp_hal::lcd_cam::LcdCam;
@@ -16,7 +16,7 @@ use esp_hal::system::{CpuControl, Stack};
 use esp_hal::time::Rate;
 use esp_hal::uart::{Uart, WakeupConfig};
 use esp_hal::usb::usb_serial_jtag::UsbSerialJtag;
-use esp_hal::{dma_tx_buffer, dma_tx_stream_buffer};
+use esp_hal::{assign_resources, dma_tx_buffer, dma_tx_stream_buffer};
 use esp_println::println;
 use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
@@ -24,7 +24,22 @@ use firefly_runtime::{audio, DeviceInfo, NetHandler, NextApp, Runtime, RuntimeCo
 
 static mut AUDIO_STACK: Stack<1024> = Stack::new();
 
+assign_resources! {
+    Resources<'d> {
+        // I2S pins for playing audio on speakers.
+        audio: AudioResources<'d> {
+            i2s: I2S0,
+            dma: DMA_CH1,
+            ws: GPIO17,   // LRCK/WS:     Word Select / Left-Right Clock
+            bclk: GPIO8,  // BCLK/SCK:    Bit Clock
+            dout: GPIO18, // DATA:        Serial Data
+            mclk: GPIO3,  // MCLK/SYSCLK: Master Clock
+        },
+    }
+}
+
 pub fn run_v3(peripherals: Peripherals) -> Result<()> {
+    let resources = split_resources!(peripherals);
     let psram_config = esp_hal::psram::PsramConfig {
         mode: esp_hal::psram::PsramMode::OctalSpi,
         ..Default::default()
@@ -124,7 +139,8 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         let mut cpus = CpuControl::new(peripherals.CPU_CTRL);
         #[expect(static_mut_refs)]
         let stack = unsafe { &mut AUDIO_STACK };
-        let res = cpus.start_app_core(stack, audio_thread);
+        let buffer = dma_tx_stream_buffer!(4092 * 4, 2048);
+        let res = cpus.start_app_core(stack, || audio_thread(resources.audio, buffer));
         if res.is_err() {
             bail!("cannot start audio processor, app core is already running");
         }
@@ -182,31 +198,22 @@ fn wrap<T, E: core::fmt::Display>(r: Result<T, E>) -> Result<T> {
     }
 }
 
-fn audio_thread() {
+fn audio_thread(pins: AudioResources, mut buffer: DmaTxStreamBuf) {
     use esp_hal::i2s::master::*;
-
-    let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
-    let peripherals = esp_hal::init(config);
-
-    let ws = peripherals.GPIO17; //   LRCK/WS:     Word Select / Left-Right Clock
-    let bclk = peripherals.GPIO8; //  BCLK/SCK:    Bit Clock
-    let dout = peripherals.GPIO18; // DATA:        Serial Data
-    let mclk = peripherals.GPIO3; //  MCLK/SYSCLK: Master Clock
 
     let config = TdmConfig::new_tdm_philips()
         .with_sample_rate(Rate::from_hz(44100))
         .with_data_format(DataFormat::Data16Channel16)
         .with_channels(Channels::STEREO);
-    let i2s = I2s::new(peripherals.I2S0, peripherals.DMA_CH1, config)
+    let i2s = I2s::new(pins.i2s, pins.dma, config)
         .unwrap()
-        .with_mclk(mclk);
+        .with_mclk(pins.mclk);
 
-    let mut buffer = dma_tx_stream_buffer!(4092 * 4, 2048);
     let mut tx = i2s
         .i2s_tx
-        .with_bclk(bclk)
-        .with_ws(ws)
-        .with_dout(dout)
+        .with_bclk(pins.bclk)
+        .with_ws(pins.ws)
+        .with_dout(pins.dout)
         .build();
 
     loop {
