@@ -112,8 +112,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     println!("reading OTA state...");
     let mut flash = FlashStorage::new(peripherals.FLASH);
     let serial_number = read_serial(&mut flash);
-    // let main_partition = get_partition(&mut flash)?;
-    let main_partition = 0;
+    let main_partition = get_partition(&mut flash)?;
 
     println!("initializing device...");
     let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, flash).context("init device")?;
@@ -166,6 +165,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     }
 }
 
+#[inline(never)]
 fn get_partition(flash: &mut FlashStorage<'_>) -> Result<u8> {
     let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
     let mut ota = OtaUpdater::new(flash, &mut pt_buf)?;
