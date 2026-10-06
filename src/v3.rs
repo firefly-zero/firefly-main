@@ -35,6 +35,18 @@ assign_resources! {
             dout: GPIO18, // DATA:        Serial Data
             mclk: GPIO3,  // MCLK/SYSCLK: Master Clock
         },
+        sd_card: SdCardResources<'d> {
+            sclk: GPIO9,
+            miso: GPIO46,
+            mosi: GPIO10,
+            cs: GPIO11,
+            spi: SPI2,
+        },
+        io_uart: IoUartResources<'d> {
+            uart: UART1,
+            rx: GPIO15,
+            tx: GPIO7,
+        },
     }
 }
 
@@ -85,27 +97,8 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     };
 
     println!("initializing SPIs...");
-    let sd_spi = {
-        let sclk = peripherals.GPIO9;
-        let miso = peripherals.GPIO46;
-        let mosi = peripherals.GPIO10;
-        let cs = Output::new(peripherals.GPIO11, Level::High, OutputConfig::default());
-
-        let spi_config = esp_hal::spi::master::Config::default().with_frequency(Rate::from_mhz(4));
-        let spi = Spi::new(peripherals.SPI2, spi_config).context("create SPI driver")?;
-        let spi = spi.with_sck(sclk).with_miso(miso).with_mosi(mosi);
-        ExclusiveDevice::new(spi, cs, Delay::new()).context("create SPI device")?
-    };
-
-    let mut io_uart = {
-        let uart_config = esp_hal::uart::Config::default().with_baudrate(921_600);
-        let uart = Uart::new(peripherals.UART1, uart_config).context("create UART")?;
-        uart.with_rx(peripherals.GPIO15).with_tx(peripherals.GPIO7)
-    };
-    io_uart
-        .enable_wakeup(&WakeupConfig::default())
-        .context("enable wakeup on IO")?;
-
+    let sd_spi = create_sd_spi(resources.sd_card)?;
+    let io_uart = create_io_uart(resources.io_uart)?;
     let mut usb_serial = UsbSerialJtag::new(peripherals.USB_DEVICE);
     _ = usb_serial.write_byte_nb(0x00);
 
@@ -165,6 +158,37 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     }
 }
 
+#[inline(never)]
+fn create_sd_spi(
+    pins: SdCardResources<'_>,
+) -> Result<ExclusiveDevice<Spi<'_, esp_hal::Blocking>, Output<'_>, Delay>> {
+    let cs = Output::new(pins.cs, Level::High, OutputConfig::default());
+    let spi_config = esp_hal::spi::master::Config::default().with_frequency(Rate::from_mhz(4));
+    let spi = Spi::new(pins.spi, spi_config).context("create SPI driver")?;
+    let spi = spi
+        .with_sck(pins.sclk)
+        .with_miso(pins.miso)
+        .with_mosi(pins.mosi);
+    ExclusiveDevice::new(spi, cs, Delay::new()).context("create SPI device")
+}
+
+#[inline(never)]
+fn create_io_uart(pins: IoUartResources<'_>) -> Result<Uart<'_, esp_hal::Blocking>> {
+    let mut io_uart = {
+        let uart_config = esp_hal::uart::Config::default().with_baudrate(921_600);
+        let uart = Uart::new(pins.uart, uart_config).context("create UART")?;
+        uart.with_rx(pins.rx).with_tx(pins.tx)
+    };
+    io_uart
+        .enable_wakeup(&WakeupConfig::default())
+        .context("enable wakeup on IO")?;
+    Ok(io_uart)
+}
+
+// Rust compile aggressively inlines all functions to squeeze out the best performance.
+// This, however, can leave on stack of the main function some things that we don't
+// need anymore. To prevent this, we move as many things as possible into separate
+// functions and forbid their inlining.
 #[inline(never)]
 fn get_partition(flash: &mut FlashStorage<'_>) -> Result<u8> {
     let mut pt_buf = [0u8; esp_bootloader_esp_idf::partitions::PARTITION_TABLE_MAX_LEN];
