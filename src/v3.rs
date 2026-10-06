@@ -22,7 +22,7 @@ use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
 use firefly_runtime::{audio, DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
 
-static mut AUDIO_STACK: Stack<1024> = Stack::new();
+static mut AUDIO_STACK: Stack<2048> = Stack::new();
 
 assign_resources! {
     Resources<'d> {
@@ -112,7 +112,8 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     println!("reading OTA state...");
     let mut flash = FlashStorage::new(peripherals.FLASH);
     let serial_number = read_serial(&mut flash);
-    let main_partition = get_partition(&mut flash)?;
+    // let main_partition = get_partition(&mut flash)?;
+    let main_partition = 0;
 
     println!("initializing device...");
     let mut device = DeviceImpl::new(sd_spi, io_uart, usb_serial, flash).context("init device")?;
@@ -139,7 +140,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         let mut cpus = CpuControl::new(peripherals.CPU_CTRL);
         #[expect(static_mut_refs)]
         let stack = unsafe { &mut AUDIO_STACK };
-        let buffer = dma_tx_stream_buffer!(4092 * 4, 2048);
+        let buffer = dma_tx_stream_buffer!(4092, 1024);
         let res = cpus.start_app_core(stack, || audio_thread(resources.audio, buffer));
         if res.is_err() {
             bail!("cannot start audio processor, app core is already running");
@@ -216,9 +217,10 @@ fn audio_thread(pins: AudioResources, mut buffer: DmaTxStreamBuf) {
         .with_dout(pins.dout)
         .build();
 
+    buffer.push_with(fill_audio);
     loop {
-        buffer.push_with(fill_audio);
-        let transaction = tx.write(buffer).unwrap();
+        let mut transaction = tx.write(buffer).unwrap();
+        transaction.push_with(fill_audio);
         let res;
         (res, tx, buffer) = transaction.wait();
         res.unwrap();
