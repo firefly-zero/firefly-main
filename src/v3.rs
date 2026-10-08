@@ -22,7 +22,7 @@ use esp_storage::FlashStorage;
 use firefly_hal::DeviceImpl;
 use firefly_runtime::{audio, DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
 
-static mut AUDIO_STACK: Stack<2048> = Stack::new();
+static mut AUDIO_STACK: Stack<4096> = Stack::new();
 
 assign_resources! {
     Resources<'d> {
@@ -133,10 +133,10 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         #[expect(static_mut_refs)]
         let stack = unsafe { &mut AUDIO_STACK };
         let buffer = dma_tx_stream_buffer!(4092, 1024);
-        let res = cpus.start_app_core(stack, || audio_thread(resources.audio, buffer));
-        if res.is_err() {
-            bail!("cannot start audio processor, app core is already running");
-        }
+        match cpus.start_app_core(stack, || audio_thread(resources.audio, buffer)) {
+            Ok(guard) => core::mem::forget(guard),
+            Err(_) => bail!("cannot start audio processor, app core is already running"),
+        };
     }
 
     println!("running...");
