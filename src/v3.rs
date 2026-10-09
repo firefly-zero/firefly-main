@@ -232,20 +232,23 @@ fn audio_thread(pins: AudioResources) {
         .unwrap()
         .with_mclk(pins.mclk);
 
-    let tx = i2s
+    let mut tx = i2s
         .i2s_tx
         .with_bclk(pins.bclk)
         .with_ws(pins.ws)
         .with_dout(pins.dout)
         .build();
 
-    let mut buffer = dma_tx_stream_buffer!(4092, 1024);
-    buffer.push_with(fill_audio);
-    let mut transaction = tx.write(buffer).unwrap();
+    let mut buffer = dma_tx_stream_buffer!(4096, 1024);
     loop {
-        if transaction.available_bytes() > 10 {
-            transaction.push_with(fill_audio);
+        buffer.push_with(fill_audio);
+        let mut transaction = tx.write(buffer).unwrap();
+        while !transaction.is_done() {
+            if transaction.available_bytes() >= 4 {
+                transaction.push_with(fill_audio);
+            }
         }
+        (tx, buffer) = transaction.stop();
     }
 }
 
