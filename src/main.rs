@@ -26,7 +26,7 @@ fn main() -> ! {
     let res = run(peripherals);
     match res {
         Ok(()) => println!("unexpected exit"),
-        Err(err) => println!("fatal error: {err}"),
+        Err(err) => println!("fatal error: {}", ErrorChain(err)),
     }
 
     // If the code fails, restart the chip.
