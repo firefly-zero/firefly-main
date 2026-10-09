@@ -4,7 +4,6 @@ use embedded_hal_bus::spi::ExclusiveDevice;
 use esp_bootloader_esp_idf::ota_updater::OtaUpdater;
 use esp_bootloader_esp_idf::partitions::AppPartitionSubType;
 use esp_hal::delay::Delay;
-use esp_hal::dma::DmaTxStreamBuf;
 use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::lcd_cam::lcd::i8080::I8080;
 use esp_hal::lcd_cam::LcdCam;
@@ -132,8 +131,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         let mut cpus = CpuControl::new(peripherals.CPU_CTRL);
         #[expect(static_mut_refs)]
         let stack = unsafe { &mut AUDIO_STACK };
-        let buffer = dma_tx_stream_buffer!(4092, 1024);
-        match cpus.start_app_core(stack, || audio_thread(resources.audio, buffer)) {
+        match cpus.start_app_core(stack, || audio_thread(resources.audio)) {
             Ok(guard) => core::mem::forget(guard),
             Err(_) => bail!("cannot start audio processor, app core is already running"),
         };
@@ -223,7 +221,7 @@ fn wrap<T, E: core::fmt::Display>(r: Result<T, E>) -> Result<T> {
     }
 }
 
-fn audio_thread(pins: AudioResources, mut buffer: DmaTxStreamBuf) {
+fn audio_thread(pins: AudioResources) {
     use esp_hal::i2s::master::*;
 
     let config = TdmConfig::new_tdm_philips()
@@ -234,20 +232,20 @@ fn audio_thread(pins: AudioResources, mut buffer: DmaTxStreamBuf) {
         .unwrap()
         .with_mclk(pins.mclk);
 
-    let mut tx = i2s
+    let tx = i2s
         .i2s_tx
         .with_bclk(pins.bclk)
         .with_ws(pins.ws)
         .with_dout(pins.dout)
         .build();
 
+    let mut buffer = dma_tx_stream_buffer!(4092, 1024);
     buffer.push_with(fill_audio);
+    let mut transaction = tx.write(buffer).unwrap();
     loop {
-        let mut transaction = tx.write(buffer).unwrap();
-        transaction.push_with(fill_audio);
-        let res;
-        (res, tx, buffer) = transaction.wait();
-        res.unwrap();
+        if transaction.available_bytes() > 10 {
+            transaction.push_with(fill_audio);
+        }
     }
 }
 
@@ -258,5 +256,5 @@ fn fill_audio(buf: &mut [u8]) -> usize {
     audio::exec_external(|manager| {
         manager.write(buf);
     });
-    buf.len()
+    len / 2 * 2
 }
