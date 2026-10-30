@@ -150,6 +150,8 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
                     config.finalize();
                     LowPower::new(peripherals.LPWR).sleep_deep(RtcSleepConfig::deep());
                 }
+                // Reload system settings in case they were changed by sys.settings.
+                config.apply_settings();
                 break;
             }
         }
