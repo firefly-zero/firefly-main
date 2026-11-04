@@ -12,7 +12,6 @@ custom,   data, undefined, 0x10000,    4K,
 coredump, data, coredump,  0x11000,   32K,
 # free space: 28K
 #
-factory,  app,  factory,   0x20000, 2048K,
-ota_0,    app,  ota_0,    0x220000, 2048K,
-ota_1,    app,  ota_1,    0x420000, 2048K,
-# free space: 1920K
+factory,  app,  factory,   0x20000, 2688K,
+ota_0,    app,  ota_0,    0x2c0000, 2688K,
+ota_1,    app,  ota_1,    0x560000, 2688K,
