@@ -43,6 +43,6 @@ codegen-units = 1        # LLVM can perform better optimizations using a single 
 debug-assertions = false
 incremental = false
 lto = "fat"
-opt-level = "s"          # Optimize for speed.
+opt-level = 3            # Optimize for speed.
 overflow-checks = false
 panic = "abort"
