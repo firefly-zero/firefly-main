@@ -7,8 +7,7 @@ use esp_hal::delay::Delay;
 use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::lcd_cam::lcd::i8080::I8080;
 use esp_hal::lcd_cam::LcdCam;
-use esp_hal::peripherals::Peripherals;
-use esp_hal::psram::Psram;
+use esp_hal::peripherals::{Peripherals, CPU_CTRL};
 use esp_hal::rtc_cntl::sleep::{LowPower, RtcSleepConfig};
 use esp_hal::spi::master::Spi;
 use esp_hal::system::{CpuControl, Stack};
@@ -46,54 +45,37 @@ assign_resources! {
             rx: GPIO15,
             tx: GPIO7,
         },
+        display: DisplayResources<'d> {
+            d0: GPIO12,
+            d1: GPIO13,
+            d2: GPIO14,
+            d3: GPIO21,
+            d4: GPIO47,
+            d5: GPIO48,
+            d6: GPIO45,
+            d7: GPIO38,
+            d8: GPIO39,
+            d9: GPIO40,
+            d10: GPIO41,
+            d11: GPIO42,
+            d12: GPIO44,
+            d13: GPIO43,
+            d14: GPIO2,
+            d15: GPIO1,
+            dc: GPIO5,
+            wrx: GPIO4,
+            dma: DMA_CH0,
+            cam: LCD_CAM,
+        }
     }
 }
 
 pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     let resources = split_resources!(peripherals);
-    let psram_config = esp_hal::psram::PsramConfig {
-        mode: esp_hal::psram::PsramMode::OctalSpi,
-        ..Default::default()
-    };
-    let psram = Psram::new(peripherals.PSRAM, psram_config);
-    let (start, size) = psram.raw_parts();
-    init_psram_heap(start, size);
+    init_psram_heap(peripherals.PSRAM);
 
     println!("waiting for IO to start...");
     Delay::new().delay_millis(1000);
-
-    println!("initializing display...");
-    let display = {
-        let lcd_cam = LcdCam::new(peripherals.LCD_CAM);
-        let config = esp_hal::lcd_cam::lcd::i8080::Config::default();
-        let Ok(bus) = I8080::new(lcd_cam.lcd, peripherals.DMA_CH0, config) else {
-            bail!("failed to create I8080 bus")
-        };
-        let bus = bus
-            .with_data0(peripherals.GPIO12)
-            .with_data1(peripherals.GPIO13)
-            .with_data2(peripherals.GPIO14)
-            .with_data3(peripherals.GPIO21)
-            .with_data4(peripherals.GPIO47)
-            .with_data5(peripherals.GPIO48)
-            .with_data6(peripherals.GPIO45)
-            .with_data7(peripherals.GPIO38)
-            .with_data8(peripherals.GPIO39)
-            .with_data9(peripherals.GPIO40)
-            .with_data10(peripherals.GPIO41)
-            .with_data11(peripherals.GPIO42)
-            .with_data12(peripherals.GPIO44)
-            .with_data13(peripherals.GPIO43)
-            .with_data14(peripherals.GPIO2)
-            .with_data15(peripherals.GPIO1)
-            .with_dc(peripherals.GPIO5)
-            .with_wrx(peripherals.GPIO4);
-        // 2 bytes per pixel, 240 pixels per line, 4 lines.
-        let buf1 = dma_tx_buffer!(480 * 4)?;
-        let buf2 = dma_tx_buffer!(480 * 4)?;
-        let writer = Writer::new(bus, buf1, buf2);
-        Display::new(writer)?
-    };
 
     println!("initializing SPIs...");
     let sd_spi = create_sd_spi(resources.sd_card)?;
@@ -112,7 +94,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
     let mut config = RuntimeConfig {
         next: NextApp::Launcher,
         device,
-        display,
+        display: create_display(resources.display)?,
         net_handler: NetHandler::None,
     };
     config.apply_settings();
@@ -127,15 +109,7 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
         io_partition,
     });
 
-    {
-        let mut cpus = CpuControl::new(peripherals.CPU_CTRL);
-        #[expect(static_mut_refs)]
-        let stack = unsafe { &mut AUDIO_STACK };
-        match cpus.start_app_core(stack, || audio_thread(resources.audio)) {
-            Ok(guard) => core::mem::forget(guard),
-            Err(_) => bail!("cannot start audio processor, app core is already running"),
-        };
-    }
+    start_audio_process(peripherals.CPU_CTRL, resources.audio)?;
 
     println!("running...");
     loop {
@@ -156,6 +130,52 @@ pub fn run_v3(peripherals: Peripherals) -> Result<()> {
             }
         }
     }
+}
+
+#[inline(never)]
+fn start_audio_process(cpu_ctrl: CPU_CTRL, audio: AudioResources) -> Result<()> {
+    let mut cpus = CpuControl::new(cpu_ctrl);
+    #[expect(static_mut_refs)]
+    let stack = unsafe { &mut AUDIO_STACK };
+    match cpus.start_app_core(stack, || audio_thread(audio)) {
+        Ok(guard) => core::mem::forget(guard),
+        Err(_) => bail!("cannot start audio processor, app core is already running"),
+    };
+    Ok(())
+}
+
+#[inline(never)]
+fn create_display(pins: DisplayResources<'_>) -> Result<Display<'_>> {
+    let lcd_cam = LcdCam::new(pins.cam);
+    let config = esp_hal::lcd_cam::lcd::i8080::Config::default();
+    let Ok(bus) = I8080::new(lcd_cam.lcd, pins.dma, config) else {
+        bail!("failed to create I8080 bus")
+    };
+    let bus = bus
+        .with_data0(pins.d0)
+        .with_data1(pins.d1)
+        .with_data2(pins.d2)
+        .with_data3(pins.d3)
+        .with_data4(pins.d4)
+        .with_data5(pins.d5)
+        .with_data6(pins.d6)
+        .with_data7(pins.d7)
+        .with_data8(pins.d8)
+        .with_data9(pins.d9)
+        .with_data10(pins.d10)
+        .with_data11(pins.d11)
+        .with_data12(pins.d12)
+        .with_data13(pins.d13)
+        .with_data14(pins.d14)
+        .with_data15(pins.d15)
+        .with_dc(pins.dc)
+        .with_wrx(pins.wrx);
+    // 2 bytes per pixel, 240 pixels per line, 4 lines.
+    let buf1 = dma_tx_buffer!(480 * 4)?;
+    let buf2 = dma_tx_buffer!(480 * 4)?;
+    let writer = Writer::new(bus, buf1, buf2);
+    let display = Display::new(writer)?;
+    Ok(display)
 }
 
 #[inline(never)]

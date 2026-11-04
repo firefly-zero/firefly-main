@@ -18,7 +18,11 @@ esp_bootloader_esp_idf::esp_app_desc!();
 
 #[entry]
 fn main() -> ! {
-    esp_alloc::heap_allocator!(size: 280 * 1024);
+    // There must be enough space left no used by the heap and static items
+    // to fit the stack. If the heap is too big, the compiler will silently
+    // reduce the stack size which will cause stack overflow in runtime:
+    // "Detected a write to the stack guard value on ProCpu".
+    esp_alloc::heap_allocator!(size: 200 * 1024);
     println!("initializing peripherals...");
     let config = esp_hal::Config::default().with_cpu_clock(CpuClock::max());
     let peripherals = esp_hal::init(config);

@@ -8,7 +8,6 @@ use esp_hal::gpio::{Level, Output, OutputConfig};
 use esp_hal::lcd_cam::lcd::i8080::I8080;
 use esp_hal::lcd_cam::LcdCam;
 use esp_hal::peripherals::Peripherals;
-use esp_hal::psram::Psram;
 use esp_hal::rtc_cntl::sleep::{LowPower, RtcSleepConfig};
 use esp_hal::spi::master::Spi;
 use esp_hal::time::Rate;
@@ -20,13 +19,7 @@ use firefly_hal::DeviceImpl;
 use firefly_runtime::{DeviceInfo, NetHandler, NextApp, Runtime, RuntimeConfig};
 
 pub fn run_v2(peripherals: Peripherals) -> Result<(), Error> {
-    let psram_config = esp_hal::psram::PsramConfig {
-        mode: esp_hal::psram::PsramMode::OctalSpi,
-        ..Default::default()
-    };
-    let psram = Psram::new(peripherals.PSRAM, psram_config);
-    let (start, size) = psram.raw_parts();
-    init_psram_heap(start, size);
+    init_psram_heap(peripherals.PSRAM);
 
     println!("initializing display...");
     let display = {
